@@ -1,0 +1,116 @@
+/* Homepage — museum archive register */
+
+.home {
+  padding: 0 clamp(1.5rem, 5vw, 4rem);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Hero — asymmetric, not centered */
+.hero {
+  padding-top: clamp(4rem, 10vh, 8rem);
+  padding-bottom: clamp(3rem, 6vh, 5rem);
+  max-width: 720px;
+}
+
+.heroTitle {
+  font-family: var(--font-serif);
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-weight: 300;
+  font-style: italic;
+  line-height: 1.1;
+  color: #171717;
+  margin: 0 0 1rem;
+  letter-spacing: -0.02em;
+}
+
+.heroSubtitle {
+  font-family: var(--font-mono);
+  font-size: clamp(0.7rem, 1.2vw, 0.8rem);
+  color: #737373;
+  margin: 0;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Epigraph — line-by-line fade in, renders before JS */
+.epigraph {
+  max-width: 520px;
+  padding: clamp(2rem, 5vh, 4rem) 0;
+  border-top: 1px solid #737373;
+}
+
+.epigraphLine {
+  font-family: var(--font-serif);
+  font-size: clamp(1rem, 1.5vw, 1.125rem);
+  line-height: 1.65;
+  color: #171717;
+  margin: 0 0 0.5rem;
+  opacity: 0;
+  animation: fadeIn 0.6s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .epigraphLine {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* Empirical anchor */
+.anchor {
+  max-width: 640px;
+  padding: clamp(2rem, 5vh, 4rem) 0;
+  border-top: 1px solid #737373;
+}
+
+.anchorText {
+  font-family: var(--font-serif);
+  font-size: clamp(0.9rem, 1.3vw, 1rem);
+  line-height: 1.75;
+  color: #171717;
+  margin: 0 0 1.5rem;
+}
+
+.anchorCoda {
+  font-family: var(--font-serif);
+  font-size: clamp(0.9rem, 1.3vw, 1rem);
+  font-style: italic;
+  line-height: 1.75;
+  color: #171717;
+  margin: 0;
+}
+
+/* Finding line */
+.findingLine {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: #737373;
+  margin: 0 0 clamp(3rem, 8vh, 6rem);
+}
+
+/* Entry affordance — small, lower-third, no button styling */
+.entry {
+  padding-bottom: clamp(4rem, 10vh, 8rem);
+}
+
+.entryLink {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  font-style: italic;
+  color: #171717;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color 300ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.entryLink:hover {
+  color: #B85C3B;
+}
+

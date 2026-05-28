@@ -1,0 +1,13 @@
+pre-commit:
+  commands:
+    no-secrets:
+      run: |
+        if git diff --cached --name-only | xargs grep -l \
+          -e 'eyJhbGciOi' \
+          -e 'SUPABASE_SERVICE_ROLE_KEY=[a-zA-Z0-9]' \
+          2>/dev/null; then
+          echo "ERROR: Possible secret detected in staged files. Remove credentials before committing."
+          exit 1
+        fi
+    typecheck:
+      run: npx tsc --noEmit
