@@ -3,6 +3,7 @@
  * fetcher; this wraps it with ingestion_runs bookkeeping and source health stats.
  */
 import type { Source } from '../db/schema';
+import { checkSourceRateLimit } from '../ratelimit';
 import {
   completeRun,
   getEnabledSources,
@@ -16,6 +17,21 @@ export async function runSourceIngest(
   source: Source,
   fetcher: (source: Source) => Promise<FetchResult>
 ): Promise<RunSummary> {
+  const limitPerHour = source.rateLimitPerHour;
+  if (limitPerHour && limitPerHour > 0) {
+    const rl = await checkSourceRateLimit(source.id, limitPerHour);
+    if (!rl.success) {
+      return {
+        sourceId: source.id,
+        name: source.name,
+        status: 'skipped',
+        ingested: 0,
+        errors: [],
+        note: `rate limit reached (${limitPerHour}/h)`,
+      };
+    }
+  }
+
   const runId = await startRun(source.id);
   try {
     const { items, errors } = await fetcher(source);

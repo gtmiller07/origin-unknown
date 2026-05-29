@@ -31,7 +31,7 @@ export interface FetchResult {
   errors: IngestError[];
 }
 
-export type RunStatus = 'success' | 'partial' | 'failed';
+export type RunStatus = 'success' | 'partial' | 'failed' | 'skipped';
 
 export interface RunSummary {
   sourceId: string;
@@ -39,6 +39,8 @@ export interface RunSummary {
   status: RunStatus;
   ingested: number;
   errors: IngestError[];
+  /** Human-readable reason when a source did not run, e.g. a rate-limit skip. */
+  note?: string;
 }
 
 export interface RssSourceConfig {

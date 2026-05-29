@@ -3,8 +3,11 @@
  * batch missing an embedding, embed via OpenAI, write the vectors back, and
  * record spend in api_call_log. The DEFAULT_LIMIT keeps a single cron run
  * inside its time budget; the manual script drains the backlog by looping.
+ * Each batch is gated by the cost-cap breaker, so a run halts early once the
+ * OpenAI (or aggregate) cap is reached.
  */
 import { eq, isNull } from 'drizzle-orm';
+import { isCapped } from '../cost/caps';
 import { db } from '../db/client';
 import { apiCallLog, artifacts } from '../db/schema';
 import { EMBEDDING_USD_PER_TOKEN, embedTexts } from './embeddings';
@@ -21,6 +24,8 @@ export interface EmbedSummary {
   totalTokens: number;
   costUsd: number;
   batches: number;
+  /** True if the run stopped early because the OpenAI/aggregate cost cap is breached. */
+  capped: boolean;
 }
 
 export async function embedPendingArtifacts(
@@ -48,9 +53,14 @@ export async function embedPendingArtifacts(
     totalTokens: 0,
     costUsd: 0,
     batches: 0,
+    capped: false,
   };
 
   for (let i = 0; i < targets.length; i += batchSize) {
+    if (await isCapped('openai')) {
+      summary.capped = true;
+      break;
+    }
     const batch = targets.slice(i, i + batchSize);
     const startedAt = Date.now();
     const { embeddings, totalTokens } = await embedTexts(batch.map((t) => t.text));
