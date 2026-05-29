@@ -18,8 +18,13 @@ const nextConfig: NextConfig = {
   },
 };
 
-const sentryToken = process.env.SENTRY_AUTH_TOKEN;
-const sentryEnabled = Boolean(sentryToken && sentryToken !== 'placeholder');
+// Observability tooling must never fail a production build: only enable the
+// Sentry plugin when fully configured, and treat any upload error as non-fatal.
+const isConfigured = (v: string | undefined) => Boolean(v && v !== 'placeholder');
+const sentryEnabled =
+  isConfigured(process.env.SENTRY_AUTH_TOKEN) &&
+  isConfigured(process.env.SENTRY_ORG) &&
+  isConfigured(process.env.SENTRY_PROJECT);
 
 export default sentryEnabled
   ? withSentryConfig(nextConfig, {
@@ -30,5 +35,10 @@ export default sentryEnabled
       hideSourceMaps: true,
       disableLogger: true,
       automaticVercelMonitors: true,
+      unstable_sentryWebpackPluginOptions: {
+        errorHandler: (err: Error) => {
+          console.warn(`[sentry] non-fatal build plugin error: ${err.message}`);
+        },
+      },
     })
   : nextConfig;
