@@ -6,12 +6,14 @@
  * Defaults to state_media_rss.
  */
 import type { Source } from '../lib/db/schema';
+import { fetchBlueskyArtifacts } from '../lib/ingestion/bluesky';
 import { fetchRssArtifacts } from '../lib/ingestion/rss';
 import type { FetchResult } from '../lib/ingestion/types';
 import { useScriptDatabaseUrl } from './db-env';
 
 const FETCHERS: Record<string, (source: Source) => Promise<FetchResult>> = {
   state_media_rss: fetchRssArtifacts,
+  bluesky: fetchBlueskyArtifacts,
 };
 
 async function main() {

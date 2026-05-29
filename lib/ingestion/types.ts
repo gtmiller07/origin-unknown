@@ -47,3 +47,12 @@ export interface RssSourceConfig {
   feeds: string[];
   originCountryCodes?: string[];
 }
+
+export interface BlueskySourceConfig {
+  /** Handles (e.g. 'xinhua.bsky.social') or DIDs whose author feeds are pulled. */
+  actors: string[];
+  /** ISO 3166-1 alpha-2 codes applied to every artifact from this source. */
+  originCountryCodes?: string[];
+  /** Include the account's reposts of others (default false: authored posts only). */
+  includeReposts?: boolean;
+}
