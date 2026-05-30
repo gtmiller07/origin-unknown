@@ -72,3 +72,18 @@ export interface RedditSourceConfig {
   /** Listing to pull; defaults to 'new' (chronological, best for incremental ingest). */
   listing?: 'new' | 'hot' | 'top';
 }
+
+export interface HuggingFaceSourceConfig {
+  /** Hub repository type to list. Defaults to 'model'. */
+  repoType?: 'model' | 'dataset';
+  /** Sort order: 'trending' (default), 'downloads', 'likes', 'lastModified', 'createdAt'. */
+  sort?: 'trending' | 'downloads' | 'likes' | 'lastModified' | 'createdAt';
+  /** Optional Hub tag filter, e.g. 'text-generation', 'text-to-image', 'translation'. */
+  filter?: string;
+  /** Optional free-text search over repo ids. */
+  search?: string;
+  /** Max repos to pull per run (1–100; defaults to 50). */
+  limit?: number;
+  /** ISO 3166-1 alpha-2 codes; usually unset — the Hub is a mixed-origin global commons. */
+  originCountryCodes?: string[];
+}
