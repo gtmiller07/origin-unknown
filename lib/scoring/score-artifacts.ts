@@ -41,6 +41,8 @@ export interface ScoreSummary {
   /** True if the run halted early on the anthropic/aggregate cost cap. */
   capped: boolean;
   promptVersion: string | null;
+  /** Categorised failure messages for artifacts that did not score this run. */
+  errors: string[];
 }
 
 function clamp01(n: number): number {
@@ -66,6 +68,7 @@ export async function scorePendingArtifacts(opts: { limit?: number } = {}): Prom
     costUsd: 0,
     capped: false,
     promptVersion: null,
+    errors: [],
   };
 
   const [prompt] = await db
@@ -142,15 +145,17 @@ export async function scorePendingArtifacts(opts: { limit?: number } = {}): Prom
     } catch (err) {
       // Transport/API failure: nothing trustworthy was billed, so leave the
       // artifact 'pending' and let the next run retry it.
+      const message = `api_call: ${errorMessage(err)}`;
       await logScoreCall({
         artifactId: row.id,
         inputTokens: 0,
         outputTokens: 0,
         costUsd: 0,
         durationMs: Date.now() - startedAt,
-        status: 'error',
-        errorMessage: errorMessage(err),
+        status: 'failed',
+        errorMessage: message,
       });
+      summary.errors.push(message);
       summary.failed += 1;
       continue;
     }
@@ -164,16 +169,18 @@ export async function scorePendingArtifacts(opts: { limit?: number } = {}): Prom
     if (!parsed.success) {
       // The call cost real tokens even though the payload was malformed: record
       // the spend and mark the artifact failed so it isn't retried in a loop.
+      const message = `parse_error: ${parsed.error.message.slice(0, 480)}`;
       await logScoreCall({
         artifactId: row.id,
         inputTokens: call.usage.inputTokens,
         outputTokens: call.usage.outputTokens,
         costUsd: call.usage.costUsd,
         durationMs,
-        status: 'parse_error',
-        errorMessage: parsed.error.message.slice(0, 500),
+        status: 'failed',
+        errorMessage: message,
       });
       await markFailed(row.id);
+      summary.errors.push(message);
       summary.failed += 1;
       continue;
     }
@@ -247,15 +254,17 @@ export async function scorePendingArtifacts(opts: { limit?: number } = {}): Prom
     } catch (err) {
       // Persistence failed after a successful, billed call: record the spend and
       // leave status 'pending' so the proposal is regenerated next run.
+      const message = `persist_error: ${errorMessage(err)}`;
       await logScoreCall({
         artifactId: row.id,
         inputTokens: call.usage.inputTokens,
         outputTokens: call.usage.outputTokens,
         costUsd: call.usage.costUsd,
         durationMs,
-        status: 'persist_error',
-        errorMessage: errorMessage(err),
+        status: 'failed',
+        errorMessage: message,
       });
+      summary.errors.push(message);
       summary.failed += 1;
       continue;
     }
@@ -312,7 +321,11 @@ async function logScoreCall(entry: ScoreCallLog): Promise<void> {
       status: entry.status,
       errorMessage: entry.errorMessage,
     });
-  } catch {
-    // Intentionally swallowed: the log is observability, not correctness.
+  } catch (err) {
+    // The log is observability, not correctness — never fail the run over it.
+    // But surface it to the platform logs: a silently-rejected insert (e.g. a
+    // status that violates the api_call_log CHECK constraint) must not be able
+    // to blind us again.
+    console.error('logScoreCall: failed to write api_call_log row', err);
   }
 }
