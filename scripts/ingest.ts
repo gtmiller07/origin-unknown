@@ -7,6 +7,7 @@
  */
 import type { Source } from '../lib/db/schema';
 import { fetchBlueskyArtifacts } from '../lib/ingestion/bluesky';
+import { fetchCulturalArtifacts } from '../lib/ingestion/cultural';
 import { fetchGenaiOpenArtifacts } from '../lib/ingestion/genai-open';
 import { fetchMastodonArtifacts } from '../lib/ingestion/mastodon';
 import { fetchRedditArtifacts } from '../lib/ingestion/reddit';
@@ -22,6 +23,7 @@ const FETCHERS: Record<string, (source: Source) => Promise<FetchResult>> = {
   reddit: fetchRedditArtifacts,
   mastodon: fetchMastodonArtifacts,
   genai_open_api: fetchGenaiOpenArtifacts,
+  cultural_institution: fetchCulturalArtifacts,
 };
 
 async function main() {

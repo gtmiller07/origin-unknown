@@ -130,3 +130,38 @@ export interface CivitaiSourceConfig {
   /** ISO 3166-1 alpha-2 codes; usually unset — Civitai is a mixed-origin global commons. */
   originCountryCodes?: string[];
 }
+
+/**
+ * The cultural_institution category spans multiple open-access museum APIs — the high-
+ * provenance, documented-human-heritage contrast to AI-generated content. Like genai_open_api,
+ * each source config carries a `provider` discriminator so the single category fetcher fans out
+ * to the right museum adapter; an absent provider means 'met'. Both providers are keyless and
+ * CC0. Unlike every other category, origin is NOT a fixed per-source tag: each object's
+ * originCountryCodes is derived per-object from the museum's own culture/country provenance,
+ * because cataloguing documented origin is precisely what these institutions do.
+ */
+export type CulturalProvider = 'met' | 'cleveland';
+
+/** The Metropolitan Museum of Art Collection API (keyless, CC0). Two-step: search → per-object. */
+export interface MetSourceConfig {
+  /** Museum discriminator; absent or 'met' routes to the Met adapter. */
+  provider?: 'met';
+  /** Search term; a culture adjective ('Chinese', 'Egyptian') yields the cleanest origin pool. */
+  query: string;
+  /** Optional Met departmentId filter (see GET /departments). */
+  departmentId?: number;
+  /** Restrict to curator-flagged highlights. */
+  isHighlight?: boolean;
+  /** Max objects to fetch per run (1–100; defaults to 60). Each object is a separate request. */
+  limit?: number;
+}
+
+/** The Cleveland Museum of Art Open Access API (keyless, CC0). One-step: search returns objects. */
+export interface ClevelandSourceConfig {
+  /** Selects the Cleveland adapter; required to route here (Met is the default). */
+  provider: 'cleveland';
+  /** Search term; a culture/region word ('Japan', 'France') works well. */
+  query: string;
+  /** Max objects to pull per run (1–100; defaults to 80). Returned inline — no per-object fetch. */
+  limit?: number;
+}
