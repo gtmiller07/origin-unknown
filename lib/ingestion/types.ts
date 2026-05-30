@@ -74,6 +74,25 @@ export interface RedditSourceConfig {
 }
 
 /**
+ * Mastodon (Fediverse / ActivityPub) — the open, ungated grassroots social-discourse source.
+ * One source reads one instance's public timelines: each configured hashtag timeline plus,
+ * optionally, the federated public timeline. Public reads need no credentials, so unlike
+ * Reddit there is no API gate.
+ */
+export interface MastodonSourceConfig {
+  /** Instance host to read from, e.g. 'mastodon.social' (scheme and trailing slash optional). */
+  instance: string;
+  /** Hashtags without the leading '#' (e.g. 'geopolitics'); each tag's public timeline is pulled. */
+  hashtags?: string[];
+  /** Also pull the instance's public (federated) timeline. */
+  includePublicTimeline?: boolean;
+  /** Restrict the public timeline to the instance's own local posts (default: federated). */
+  localOnly?: boolean;
+  /** ISO 3166-1 alpha-2 codes; usually unset — the fediverse is a mixed-origin global commons. */
+  originCountryCodes?: string[];
+}
+
+/**
  * The genai_open_api category spans multiple open-GenAI providers — the Hugging Face Hub
  * (the supply side: where models/datasets are built) and Civitai (the output side: actual
  * AI-generated images). Each source's config carries a `provider` discriminator so the

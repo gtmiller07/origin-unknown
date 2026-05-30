@@ -18,6 +18,8 @@
     "seed:youtube": "node --env-file=.env.local --import tsx scripts/seed-youtube-sources.ts",
     "seed:huggingface": "node --env-file=.env.local --import tsx scripts/seed-huggingface-sources.ts",
     "seed:civitai": "node --env-file=.env.local --import tsx scripts/seed-civitai-sources.ts",
+    "seed:reddit": "node --env-file=.env.local --import tsx scripts/seed-reddit-sources.ts",
+    "seed:mastodon": "node --env-file=.env.local --import tsx scripts/seed-mastodon-sources.ts",
     "ingest": "node --env-file=.env.local --import tsx scripts/ingest.ts",
     "embed": "node --env-file=.env.local --import tsx scripts/embed.ts",
     "test": "vitest",

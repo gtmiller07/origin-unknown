@@ -7,6 +7,7 @@
     "app/api/cron/ingest-rss/route.ts": { "maxDuration": 60 },
     "app/api/cron/ingest-genai-open/route.ts": { "maxDuration": 60 },
     "app/api/cron/ingest-reddit/route.ts": { "maxDuration": 60 },
+    "app/api/cron/ingest-mastodon/route.ts": { "maxDuration": 60 },
     "app/api/cron/ingest-cultural/route.ts": { "maxDuration": 60 },
     "app/api/cron/compute-stations/route.ts": { "maxDuration": 60 },
     "app/api/cron/daily-digest/route.ts": { "maxDuration": 60 },

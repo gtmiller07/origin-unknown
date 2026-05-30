@@ -45,6 +45,7 @@ export const sourceCategoryEnum = pgEnum('source_category', [
   'genai_open_api',
   'genai_curated_upload',
   'reddit',
+  'mastodon',
   'manual_upload',
   'cultural_institution',
 ]);
