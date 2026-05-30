@@ -1,0 +1,124 @@
+# Scheduled triggers for Origin Unknown's dormant cron routes.
+#
+# vercel.json has no `crons` array on purpose — Vercel's Hobby plan caps cron
+# frequency, and we want the schedule version-controlled and reviewable. So this
+# workflow is the scheduler: it curls the GET cron endpoints with the
+# CRON_SECRET bearer token that app/api/cron/_lib/verify-cron.ts checks.
+#
+# Schedules (UTC; minutes are offset off :00 because GitHub delays top-of-hour jobs):
+#   - ingest      every 6h at :07  -> all 7 content ingest routes
+#   - embeddings  every 6h at :37  -> generate-embeddings (30m after ingest, so it has rows to embed)
+#   - maintenance daily   at 00:15 -> refresh-cost-window (resets the rolling cost-cap windows)
+#
+# Manual runs: Actions tab -> "Scheduled crons" -> Run workflow -> pick a target.
+#
+# One-time setup on the repo: add the CRON_SECRET secret (same value as the
+# Vercel env var) under Settings -> Secrets and variables -> Actions, e.g.
+#   gh secret set CRON_SECRET
+name: Scheduled crons
+
+on:
+  schedule:
+    - cron: '7 */6 * * *' # ingest
+    - cron: '37 */6 * * *' # embeddings
+    - cron: '15 0 * * *' # maintenance
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Which group to run
+        type: choice
+        default: ingest
+        options:
+          - ingest
+          - embeddings
+          - maintenance
+          - all
+
+# Least privilege: this workflow only reads the repo to check out (which it does
+# not even need), and never writes back.
+permissions:
+  contents: read
+
+# Never let two cron runs overlap — ingestion upserts are idempotent, but
+# serializing avoids double work and keeps cost accounting clean. A queued run
+# waits rather than cancelling one in flight.
+concurrency:
+  group: scheduled-crons
+  cancel-in-progress: false
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      BASE_URL: https://origin-unknown.vercel.app
+      # Passed via env (not interpolated into the script) so a malicious schedule
+      # string or input can't be injected into the shell.
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      EVENT_NAME: ${{ github.event_name }}
+      MATCHED_SCHEDULE: ${{ github.event.schedule }}
+      DISPATCH_TARGET: ${{ github.event.inputs.target }}
+    steps:
+      - name: Trigger cron endpoints
+        shell: bash
+        run: |
+          set -uo pipefail
+
+          if [ -z "${CRON_SECRET:-}" ]; then
+            echo "::error::CRON_SECRET is not set. Add it under Settings -> Secrets and variables -> Actions (same value as the Vercel env var)."
+            exit 1
+          fi
+
+          # Resolve which group to run: explicit input for manual runs, else map
+          # the matched schedule string to its group.
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            GROUP="${DISPATCH_TARGET:-ingest}"
+          else
+            case "$MATCHED_SCHEDULE" in
+              '7 */6 * * *')  GROUP="ingest" ;;
+              '37 */6 * * *') GROUP="embeddings" ;;
+              '15 0 * * *')   GROUP="maintenance" ;;
+              *) echo "::error::No group mapped to schedule '$MATCHED_SCHEDULE'"; exit 1 ;;
+            esac
+          fi
+
+          INGEST=(ingest-rss ingest-bluesky ingest-youtube ingest-reddit ingest-genai-open ingest-mastodon ingest-cultural)
+          case "$GROUP" in
+            ingest)      ROUTES=("${INGEST[@]}") ;;
+            embeddings)  ROUTES=(generate-embeddings) ;;
+            maintenance) ROUTES=(refresh-cost-window) ;;
+            all)         ROUTES=("${INGEST[@]}" generate-embeddings refresh-cost-window) ;;
+            *) echo "::error::Unknown target '$GROUP'"; exit 1 ;;
+          esac
+
+          echo "Running group: $GROUP (${#ROUTES[@]} route(s)) against $BASE_URL"
+          echo "## Scheduled crons — \`$GROUP\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+          FAILED=0
+          for route in "${ROUTES[@]}"; do
+            url="${BASE_URL}/api/cron/${route}"
+            echo "--- ${route}"
+            # -o body to a file, -w status to stdout; tolerate curl failure so one
+            # bad endpoint doesn't abort the rest.
+            http=$(curl -sS -m 120 -o /tmp/resp.json -w '%{http_code}' \
+              -H "Authorization: Bearer ${CRON_SECRET}" \
+              -H "Accept: application/json" \
+              "$url") || true
+            http="${http:-000}"
+            body="$(head -c 600 /tmp/resp.json 2>/dev/null || true)"
+            if [ "$http" = "200" ]; then
+              echo "  ok ${http}: ${body}"
+              echo "- \`${route}\` — ✅ ${http}" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "  FAIL ${http}: ${body}"
+              echo "- \`${route}\` — ❌ ${http}" >> "$GITHUB_STEP_SUMMARY"
+              FAILED=$((FAILED + 1))
+            fi
+          done
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo "::error::${FAILED} endpoint(s) did not return 200"
+            exit 1
+          fi
+          echo "All ${#ROUTES[@]} endpoint(s) returned 200."
