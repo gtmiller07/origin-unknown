@@ -7,13 +7,17 @@
  */
 import type { Source } from '../lib/db/schema';
 import { fetchBlueskyArtifacts } from '../lib/ingestion/bluesky';
+import { fetchRedditArtifacts } from '../lib/ingestion/reddit';
 import { fetchRssArtifacts } from '../lib/ingestion/rss';
 import type { FetchResult } from '../lib/ingestion/types';
+import { fetchYoutubeArtifacts } from '../lib/ingestion/youtube';
 import { useScriptDatabaseUrl } from './db-env';
 
 const FETCHERS: Record<string, (source: Source) => Promise<FetchResult>> = {
   state_media_rss: fetchRssArtifacts,
   bluesky: fetchBlueskyArtifacts,
+  youtube_api: fetchYoutubeArtifacts,
+  reddit: fetchRedditArtifacts,
 };
 
 async function main() {

@@ -56,3 +56,19 @@ export interface BlueskySourceConfig {
   /** Include the account's reposts of others (default false: authored posts only). */
   includeReposts?: boolean;
 }
+
+export interface YoutubeSourceConfig {
+  /** YouTube channel IDs (UC…) whose recent uploads are ingested. */
+  channelIds: string[];
+  /** ISO 3166-1 alpha-2 codes applied to every artifact from this source. */
+  originCountryCodes?: string[];
+}
+
+export interface RedditSourceConfig {
+  /** Subreddit names without the leading "r/" (e.g. 'china', 'worldnews'). */
+  subreddits: string[];
+  /** ISO 3166-1 alpha-2 codes applied to every artifact from this source. */
+  originCountryCodes?: string[];
+  /** Listing to pull; defaults to 'new' (chronological, best for incremental ingest). */
+  listing?: 'new' | 'hot' | 'top';
+}

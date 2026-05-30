@@ -15,6 +15,7 @@
     "db:verify": "node --env-file=.env.local --import tsx scripts/db-verify.ts",
     "seed:rss": "node --env-file=.env.local --import tsx scripts/seed-rss-sources.ts",
     "seed:bluesky": "node --env-file=.env.local --import tsx scripts/seed-bluesky-sources.ts",
+    "seed:youtube": "node --env-file=.env.local --import tsx scripts/seed-youtube-sources.ts",
     "ingest": "node --env-file=.env.local --import tsx scripts/ingest.ts",
     "embed": "node --env-file=.env.local --import tsx scripts/embed.ts",
     "test": "vitest",
