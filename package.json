@@ -17,6 +17,7 @@
     "seed:bluesky": "node --env-file=.env.local --import tsx scripts/seed-bluesky-sources.ts",
     "seed:youtube": "node --env-file=.env.local --import tsx scripts/seed-youtube-sources.ts",
     "seed:huggingface": "node --env-file=.env.local --import tsx scripts/seed-huggingface-sources.ts",
+    "seed:civitai": "node --env-file=.env.local --import tsx scripts/seed-civitai-sources.ts",
     "ingest": "node --env-file=.env.local --import tsx scripts/ingest.ts",
     "embed": "node --env-file=.env.local --import tsx scripts/embed.ts",
     "test": "vitest",

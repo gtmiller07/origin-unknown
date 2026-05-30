@@ -7,7 +7,7 @@
  */
 import type { Source } from '../lib/db/schema';
 import { fetchBlueskyArtifacts } from '../lib/ingestion/bluesky';
-import { fetchHuggingFaceArtifacts } from '../lib/ingestion/huggingface';
+import { fetchGenaiOpenArtifacts } from '../lib/ingestion/genai-open';
 import { fetchRedditArtifacts } from '../lib/ingestion/reddit';
 import { fetchRssArtifacts } from '../lib/ingestion/rss';
 import type { FetchResult } from '../lib/ingestion/types';
@@ -19,7 +19,7 @@ const FETCHERS: Record<string, (source: Source) => Promise<FetchResult>> = {
   bluesky: fetchBlueskyArtifacts,
   youtube_api: fetchYoutubeArtifacts,
   reddit: fetchRedditArtifacts,
-  genai_open_api: fetchHuggingFaceArtifacts,
+  genai_open_api: fetchGenaiOpenArtifacts,
 };
 
 async function main() {

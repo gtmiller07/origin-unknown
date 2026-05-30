@@ -73,7 +73,18 @@ export interface RedditSourceConfig {
   listing?: 'new' | 'hot' | 'top';
 }
 
+/**
+ * The genai_open_api category spans multiple open-GenAI providers — the Hugging Face Hub
+ * (the supply side: where models/datasets are built) and Civitai (the output side: actual
+ * AI-generated images). Each source's config carries a `provider` discriminator so the
+ * single category fetcher can fan out to the right adapter. An absent provider means
+ * 'huggingface' — the original Hub-only sources predate this field.
+ */
+export type GenaiProvider = 'huggingface' | 'civitai';
+
 export interface HuggingFaceSourceConfig {
+  /** Open-GenAI provider discriminator; absent or 'huggingface' routes to the Hub adapter. */
+  provider?: GenaiProvider;
   /** Hub repository type to list. Defaults to 'model'. */
   repoType?: 'model' | 'dataset';
   /** Sort order: 'trending' (default), 'downloads', 'likes', 'lastModified', 'createdAt'. */
@@ -85,5 +96,18 @@ export interface HuggingFaceSourceConfig {
   /** Max repos to pull per run (1–100; defaults to 50). */
   limit?: number;
   /** ISO 3166-1 alpha-2 codes; usually unset — the Hub is a mixed-origin global commons. */
+  originCountryCodes?: string[];
+}
+
+export interface CivitaiSourceConfig {
+  /** Selects the Civitai adapter; required to route here (Hugging Face is the default). */
+  provider: 'civitai';
+  /** Image ranking: 'Most Reactions' (default), 'Most Comments', or 'Newest'. */
+  sort?: 'Most Reactions' | 'Most Comments' | 'Newest';
+  /** Ranking window: 'AllTime' | 'Year' | 'Month' | 'Week' (default) | 'Day'. */
+  period?: 'AllTime' | 'Year' | 'Month' | 'Week' | 'Day';
+  /** Max images to pull per run (1–200; defaults to 100). */
+  limit?: number;
+  /** ISO 3166-1 alpha-2 codes; usually unset — Civitai is a mixed-origin global commons. */
   originCountryCodes?: string[];
 }
