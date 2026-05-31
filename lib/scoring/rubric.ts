@@ -43,45 +43,97 @@ export const AxisScoreSchema = z.object({
 
 export type AxisScore = z.infer<typeof AxisScoreSchema>;
 
-/** The full structured result, validated after the forced tool call returns. */
-export const ScoringResultSchema = z.object({
-  scores: z.object({
-    origin: AxisScoreSchema,
-    reach: AxisScoreSchema,
-    aesthetic_signal: AxisScoreSchema,
-    diplomatic_cross_boundary: AxisScoreSchema,
-    diplomatic_authenticity: AxisScoreSchema,
-    diplomatic_reciprocity: AxisScoreSchema,
-  }),
+/**
+ * The flat wire shape the model fills directly: `<axis>_value` and
+ * `<axis>_reasoning` for each of the six axes. Flattening is deliberate. A nested
+ * `scores` object is exactly the deeply-nested shape that intermittently trips
+ * Anthropic's forced-tool-use serialization quirk — the field comes back
+ * double-encoded as a JSON string, or restructured as an array, on ~20-33% of
+ * calls. Primitive top-level fields cannot be stringified or arrayed, so the quirk
+ * structurally cannot occur for the scores. We validate this flat shape, then
+ * transform it back into the nested form the persistence layer already consumes.
+ */
+const FlatScoringSchema = z.object({
+  origin_value: z.number().nullable(),
+  origin_reasoning: z.string().min(1),
+  reach_value: z.number().nullable(),
+  reach_reasoning: z.string().min(1),
+  aesthetic_signal_value: z.number().nullable(),
+  aesthetic_signal_reasoning: z.string().min(1),
+  diplomatic_cross_boundary_value: z.number().nullable(),
+  diplomatic_cross_boundary_reasoning: z.string().min(1),
+  diplomatic_authenticity_value: z.number().nullable(),
+  diplomatic_authenticity_reasoning: z.string().min(1),
+  diplomatic_reciprocity_value: z.number().nullable(),
+  diplomatic_reciprocity_reasoning: z.string().min(1),
   paglen_questions: z.array(z.string().min(1)).min(1),
   alt_text: z.string().min(1),
   bears_on_dissertation_question: z.boolean(),
   dissertation_relevance: z.string(),
 });
 
+/**
+ * The full structured result, validated after the forced tool call returns. The
+ * flat wire shape is transformed back into the nested
+ * `{ scores: { <axis>: { value, reasoning } } }` form so flattening the tool
+ * contract touches nothing downstream (score-artifacts.ts still reads
+ * `result.scores[axis]`).
+ */
+export const ScoringResultSchema = FlatScoringSchema.transform((f) => ({
+  scores: {
+    origin: { value: f.origin_value, reasoning: f.origin_reasoning },
+    reach: { value: f.reach_value, reasoning: f.reach_reasoning },
+    aesthetic_signal: {
+      value: f.aesthetic_signal_value,
+      reasoning: f.aesthetic_signal_reasoning,
+    },
+    diplomatic_cross_boundary: {
+      value: f.diplomatic_cross_boundary_value,
+      reasoning: f.diplomatic_cross_boundary_reasoning,
+    },
+    diplomatic_authenticity: {
+      value: f.diplomatic_authenticity_value,
+      reasoning: f.diplomatic_authenticity_reasoning,
+    },
+    diplomatic_reciprocity: {
+      value: f.diplomatic_reciprocity_value,
+      reasoning: f.diplomatic_reciprocity_reasoning,
+    },
+  } satisfies Record<AxisKey, AxisScore>,
+  paglen_questions: f.paglen_questions,
+  alt_text: f.alt_text,
+  bears_on_dissertation_question: f.bears_on_dissertation_question,
+  dissertation_relevance: f.dissertation_relevance,
+}));
+
 export type ScoringResult = z.infer<typeof ScoringResultSchema>;
 
-/** JSON-schema fragment describing one axis entry in the tool input. */
-const axisInputSchema = {
-  type: 'object',
-  properties: {
-    value: {
-      anyOf: [{ type: 'number', minimum: 0, maximum: 1 }, { type: 'null' }],
-      description:
-        'Score in [0.00, 1.00], or null if the axis cannot be scored from the available evidence.',
-    },
-    reasoning: {
-      type: 'string',
-      description:
-        '50-to-150 words naming the specific evidence and inferential steps behind the score.',
-    },
-  },
-  required: ['value', 'reasoning'],
+/** JSON-schema fragments for one axis's two flat fields in the tool input. */
+const axisValueSchema = {
+  anyOf: [{ type: 'number', minimum: 0, maximum: 1 }, { type: 'null' }],
+  description:
+    'Score in [0.00, 1.00], or null if the axis cannot be scored from the available evidence.',
+};
+const axisReasoningSchema = {
+  type: 'string',
+  description:
+    '50-to-150 words naming the specific evidence and inferential steps behind the score.',
 };
 
-const scoresProperties: Record<string, unknown> = Object.fromEntries(
-  AXIS_KEYS.map((key) => [key, { ...axisInputSchema, description: `${AXIS_LABELS[key]} axis.` }])
-);
+// Twelve flat axis properties (`<axis>_value`, `<axis>_reasoning`) and their keys.
+const flatAxisProperties: Record<string, unknown> = {};
+const flatAxisRequired: string[] = [];
+for (const key of AXIS_KEYS) {
+  flatAxisProperties[`${key}_value`] = {
+    ...axisValueSchema,
+    description: `${AXIS_LABELS[key]} axis. ${axisValueSchema.description}`,
+  };
+  flatAxisProperties[`${key}_reasoning`] = {
+    ...axisReasoningSchema,
+    description: `${AXIS_LABELS[key]} axis. ${axisReasoningSchema.description}`,
+  };
+  flatAxisRequired.push(`${key}_value`, `${key}_reasoning`);
+}
 
 /**
  * The single forced tool. We never want free prose back: `tool_choice` pins this
@@ -94,11 +146,7 @@ export const SCORING_TOOL: Anthropic.Tool = {
   input_schema: {
     type: 'object',
     properties: {
-      scores: {
-        type: 'object',
-        properties: scoresProperties,
-        required: [...AXIS_KEYS],
-      },
+      ...flatAxisProperties,
       paglen_questions: {
         type: 'array',
         items: { type: 'string' },
@@ -122,7 +170,7 @@ export const SCORING_TOOL: Anthropic.Tool = {
       },
     },
     required: [
-      'scores',
+      ...flatAxisRequired,
       'paglen_questions',
       'alt_text',
       'bears_on_dissertation_question',

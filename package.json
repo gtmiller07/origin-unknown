@@ -23,6 +23,7 @@
     "seed:cultural": "node --env-file=.env.local --import tsx scripts/seed-cultural-sources.ts",
     "ingest": "node --env-file=.env.local --import tsx scripts/ingest.ts",
     "embed": "node --env-file=.env.local --import tsx scripts/embed.ts",
+    "score": "node --env-file=.env.local --import tsx scripts/score.ts",
     "test": "vitest",
     "test:e2e": "playwright test",
     "prepare": "lefthook install"

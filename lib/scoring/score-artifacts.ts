@@ -4,8 +4,9 @@
  * judgment, and persist it as a *proposal* — writing only the ai_* columns and
  * leaving value/human_* untouched so re-runs never clobber a human-confirmed
  * score. Every iteration is gated by the anthropic cost cap, and spend is logged
- * per artifact. The conservative DEFAULT_LIMIT keeps one cron run inside its
- * time budget; calibrate it upward after the controlled first run.
+ * per artifact. At ~42s per Opus call against the route's 60s maxDuration,
+ * exactly one artifact fits per serverless request, so DEFAULT_LIMIT is 1;
+ * bulk/backlog scoring runs locally with no time ceiling via `npm run score`.
  */
 import { and, desc, eq, isNotNull } from 'drizzle-orm';
 import { scoreArtifactContent } from '../ai/claude';
@@ -27,9 +28,18 @@ import {
   sourceContext,
   thumbnailDescription,
 } from './render';
-import { AXIS_KEYS, ScoringResultSchema } from './rubric';
+import { AXIS_KEYS, type ScoringResult, ScoringResultSchema } from './rubric';
 
-const DEFAULT_LIMIT = 3;
+const DEFAULT_LIMIT = 1;
+
+/**
+ * Default scoring attempts per artifact. 1 = no retry, which keeps a single
+ * serverless request inside its ~60s ceiling (one Opus call ≈ 42s; a second
+ * attempt would risk being killed mid-flight, billing without logging). The local
+ * backfill (scripts/score.ts) raises this to retry the rare malformed tool output
+ * that survives the flattened schema, since it runs with no time ceiling.
+ */
+const DEFAULT_MAX_ATTEMPTS = 1;
 
 export interface ScoreSummary {
   scanned: number;
@@ -56,8 +66,35 @@ function toNumericString(value: number | null): string | null {
   return value === null ? null : clamp01(value).toFixed(2);
 }
 
-export async function scorePendingArtifacts(opts: { limit?: number } = {}): Promise<ScoreSummary> {
+/**
+ * `paglen_questions` is the one array left in the (now-flattened) tool schema, and
+ * Claude's forced tool call occasionally serializes an array field as a JSON
+ * *string* instead of a native value — an intermittent tool-use quirk, not bad
+ * content: the judgment is complete, just double-encoded. Coerce it back before
+ * validation so a good answer (and the tokens already billed for it) isn't thrown
+ * away. The six axis scores are flat primitive fields now, so they can no longer be
+ * double-encoded this way. Anything that still isn't valid JSON is left untouched
+ * for ScoringResultSchema to reject, and markFailed handles it.
+ */
+function normalizeToolInput(raw: unknown): unknown {
+  if (typeof raw !== 'object' || raw === null) return raw;
+  const obj = { ...(raw as Record<string, unknown>) };
+  const value = obj.paglen_questions;
+  if (typeof value === 'string') {
+    try {
+      obj.paglen_questions = JSON.parse(value);
+    } catch {
+      // Not valid JSON — leave as-is; validation will reject it downstream.
+    }
+  }
+  return obj;
+}
+
+export async function scorePendingArtifacts(
+  opts: { limit?: number; maxAttempts?: number } = {}
+): Promise<ScoreSummary> {
   const limit = opts.limit ?? DEFAULT_LIMIT;
+  const maxAttempts = Math.max(1, opts.maxAttempts ?? DEFAULT_MAX_ATTEMPTS);
 
   const summary: ScoreSummary = {
     scanned: 0,
@@ -138,43 +175,86 @@ export async function scorePendingArtifacts(opts: { limit?: number } = {}): Prom
       }),
     });
 
+    // Score with a bounded retry. The flattened tool schema makes a malformed
+    // payload rare, but an occasional intermittent quirk (or a transient API
+    // error) is recoverable by simply re-calling. Every attempt that returns is
+    // billed, so usage is accumulated across attempts and logged in full — even
+    // on terminal failure — so spend is never blind.
     const startedAt = Date.now();
-    let call: Awaited<ReturnType<typeof scoreArtifactContent>>;
-    try {
-      call = await scoreArtifactContent(prompt.systemPrompt, instruction);
-    } catch (err) {
-      // Transport/API failure: nothing trustworthy was billed, so leave the
-      // artifact 'pending' and let the next run retry it.
-      const message = `api_call: ${errorMessage(err)}`;
-      await logScoreCall({
-        artifactId: row.id,
-        inputTokens: 0,
-        outputTokens: 0,
-        costUsd: 0,
-        durationMs: Date.now() - startedAt,
-        status: 'failed',
-        errorMessage: message,
-      });
-      summary.errors.push(message);
-      summary.failed += 1;
-      continue;
+    let inputTokens = 0;
+    let outputTokens = 0;
+    let costUsd = 0;
+    let model = '';
+    let result: ScoringResult | null = null;
+    let parseError: string | null = null;
+    let transportError: string | null = null;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      let call: Awaited<ReturnType<typeof scoreArtifactContent>>;
+      try {
+        call = await scoreArtifactContent(prompt.systemPrompt, instruction);
+      } catch (err) {
+        // Transport/API failure: nothing trustworthy was billed this attempt.
+        transportError = `api_call: ${errorMessage(err)}`;
+        if (attempt < maxAttempts) {
+          console.warn(
+            `scoring: transport error on ${row.id} (attempt ${attempt}/${maxAttempts}), retrying`
+          );
+        }
+        continue;
+      }
+
+      // A call returned: bill it and clear any prior transport error.
+      inputTokens += call.usage.inputTokens;
+      outputTokens += call.usage.outputTokens;
+      costUsd += call.usage.costUsd;
+      model = call.model;
+      transportError = null;
+
+      const parsed = ScoringResultSchema.safeParse(normalizeToolInput(call.toolInput));
+      if (parsed.success) {
+        result = parsed.data;
+        parseError = null;
+        break;
+      }
+      parseError = `parse_error: ${parsed.error.message.slice(0, 480)}`;
+      if (attempt < maxAttempts) {
+        console.warn(
+          `scoring: malformed tool output on ${row.id} (attempt ${attempt}/${maxAttempts}), retrying`
+        );
+      }
     }
     const durationMs = Date.now() - startedAt;
 
-    summary.totalInputTokens += call.usage.inputTokens;
-    summary.totalOutputTokens += call.usage.outputTokens;
-    summary.costUsd += call.usage.costUsd;
+    summary.totalInputTokens += inputTokens;
+    summary.totalOutputTokens += outputTokens;
+    summary.costUsd += costUsd;
 
-    const parsed = ScoringResultSchema.safeParse(call.toolInput);
-    if (!parsed.success) {
-      // The call cost real tokens even though the payload was malformed: record
-      // the spend and mark the artifact failed so it isn't retried in a loop.
-      const message = `parse_error: ${parsed.error.message.slice(0, 480)}`;
+    if (!result) {
+      if (costUsd === 0 && transportError) {
+        // Every attempt failed in transport with nothing billed: leave the
+        // artifact 'pending' so the next run retries it.
+        await logScoreCall({
+          artifactId: row.id,
+          inputTokens: 0,
+          outputTokens: 0,
+          costUsd: 0,
+          durationMs,
+          status: 'failed',
+          errorMessage: transportError,
+        });
+        summary.errors.push(transportError);
+        summary.failed += 1;
+        continue;
+      }
+      // Real tokens were billed but no attempt produced a valid payload: record
+      // the full spend and mark the artifact failed so it isn't retried in a loop.
+      const message = parseError ?? transportError ?? 'scoring failed';
       await logScoreCall({
         artifactId: row.id,
-        inputTokens: call.usage.inputTokens,
-        outputTokens: call.usage.outputTokens,
-        costUsd: call.usage.costUsd,
+        inputTokens,
+        outputTokens,
+        costUsd,
         durationMs,
         status: 'failed',
         errorMessage: message,
@@ -185,7 +265,6 @@ export async function scorePendingArtifacts(opts: { limit?: number } = {}): Prom
       continue;
     }
 
-    const result = parsed.data;
     const proposedAt = new Date().toISOString();
 
     try {
@@ -200,7 +279,7 @@ export async function scorePendingArtifacts(opts: { limit?: number } = {}): Prom
               axis,
               aiProposedValue: proposed,
               aiReasoning: axisResult.reasoning,
-              aiModel: call.model,
+              aiModel: model,
               aiProposedAt: proposedAt,
               scoringPromptVersion: prompt.version,
               updatedAt: proposedAt,
@@ -212,7 +291,7 @@ export async function scorePendingArtifacts(opts: { limit?: number } = {}): Prom
               set: {
                 aiProposedValue: proposed,
                 aiReasoning: axisResult.reasoning,
-                aiModel: call.model,
+                aiModel: model,
                 aiProposedAt: proposedAt,
                 scoringPromptVersion: prompt.version,
                 updatedAt: proposedAt,
@@ -257,9 +336,9 @@ export async function scorePendingArtifacts(opts: { limit?: number } = {}): Prom
       const message = `persist_error: ${errorMessage(err)}`;
       await logScoreCall({
         artifactId: row.id,
-        inputTokens: call.usage.inputTokens,
-        outputTokens: call.usage.outputTokens,
-        costUsd: call.usage.costUsd,
+        inputTokens,
+        outputTokens,
+        costUsd,
         durationMs,
         status: 'failed',
         errorMessage: message,
@@ -271,9 +350,9 @@ export async function scorePendingArtifacts(opts: { limit?: number } = {}): Prom
 
     await logScoreCall({
       artifactId: row.id,
-      inputTokens: call.usage.inputTokens,
-      outputTokens: call.usage.outputTokens,
-      costUsd: call.usage.costUsd,
+      inputTokens,
+      outputTokens,
+      costUsd,
       durationMs,
       status: 'success',
     });
@@ -284,11 +363,21 @@ export async function scorePendingArtifacts(opts: { limit?: number } = {}): Prom
   return summary;
 }
 
+/**
+ * Mark an artifact's scoring as terminally failed after an unparseable payload.
+ * Best-effort: a failure here must never abort the batch (the worst case is the
+ * artifact stays 'pending' and is retried next run), so it is caught and
+ * surfaced to platform logs rather than thrown — mirroring logScoreCall.
+ */
 async function markFailed(artifactId: string): Promise<void> {
-  await db
-    .update(artifacts)
-    .set({ status: 'score_failed', updatedAt: new Date().toISOString() })
-    .where(eq(artifacts.id, artifactId));
+  try {
+    await db
+      .update(artifacts)
+      .set({ status: 'score_failed', updatedAt: new Date().toISOString() })
+      .where(eq(artifacts.id, artifactId));
+  } catch (err) {
+    console.error(`markFailed: could not set score_failed for ${artifactId}`, err);
+  }
 }
 
 function errorMessage(err: unknown): string {
