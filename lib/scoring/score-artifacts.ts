@@ -267,6 +267,37 @@ export async function scorePendingArtifacts(
 
     const proposedAt = new Date().toISOString();
 
+    // Taxonomy persistence with a source-derived ground-truth LOCK. The source
+    // category fixes which fields are authoritative from the source (kept as the
+    // 'source_prior' set by migration 0010, never overwritten by the model) versus
+    // which the scorer may set or revise (recorded here as 'ai_proposed'):
+    //   - genai_*        : ai_mediation = ai_generated is locked; authorship_class is a
+    //                      soft prior the scorer may revise; origin_ambiguity is scorer-set.
+    //   - state/cultural : authorship_class and ai_mediation are locked; origin_ambiguity scorer-set.
+    //   - everything else: the scorer sets all three.
+    // A locked field is omitted from the update, so its source_prior row value stands.
+    const cat = row.sourceCategory;
+    const isGenai = cat === 'genai_open_api' || cat === 'genai_curated_upload';
+    const isInstitutional = cat === 'state_media_rss' || cat === 'cultural_institution';
+    const taxonomyUpdate: Partial<{
+      authorshipClass: string;
+      authorshipClassProvenance: string;
+      aiMediation: string;
+      aiMediationProvenance: string;
+      originAmbiguity: string;
+      originAmbiguityProvenance: string;
+    }> = {};
+    if (!isInstitutional) {
+      taxonomyUpdate.authorshipClass = result.authorship_class;
+      taxonomyUpdate.authorshipClassProvenance = 'ai_proposed';
+    }
+    if (!isGenai && !isInstitutional) {
+      taxonomyUpdate.aiMediation = result.ai_mediation;
+      taxonomyUpdate.aiMediationProvenance = 'ai_proposed';
+    }
+    taxonomyUpdate.originAmbiguity = result.origin_ambiguity;
+    taxonomyUpdate.originAmbiguityProvenance = 'ai_proposed';
+
     try {
       await db.transaction(async (tx) => {
         for (const axis of AXIS_KEYS) {
@@ -325,6 +356,7 @@ export async function scorePendingArtifacts(
             altText: result.alt_text,
             bearsOnDissertationQuestion: result.bears_on_dissertation_question,
             dissertationRelevance: result.dissertation_relevance,
+            ...taxonomyUpdate,
             status: 'scored',
             updatedAt: proposedAt,
           })

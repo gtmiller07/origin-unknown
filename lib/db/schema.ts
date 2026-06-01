@@ -92,6 +92,19 @@ export const artifacts = pgTable(
     firstSeenAt: timestamptz('first_seen_at').defaultNow(),
     isAiGenerated: boolean('is_ai_generated'),
     aiGenerationMetadata: jsonb('ai_generation_metadata'),
+    // Authorship taxonomy (migration 0010) for the incumbent-vs-challenger design.
+    // Each value column has a companion *_provenance marker recording HOW it was set:
+    // 'source_prior' (stamped deterministically from the source category),
+    // 'ai_proposed' (set/revised by the scorer or Haiku classifier), or
+    // 'human_confirmed' (curator). NULL value = not yet determined; ambiguity is
+    // recorded as data ('ambiguous_unattributable', 'unknown', 'high'), never as a
+    // silently missing value. CHECK constraints live in migration 0010.
+    authorshipClass: text('authorship_class'),
+    authorshipClassProvenance: text('authorship_class_provenance'),
+    aiMediation: text('ai_mediation'),
+    aiMediationProvenance: text('ai_mediation_provenance'),
+    originAmbiguity: text('origin_ambiguity'),
+    originAmbiguityProvenance: text('origin_ambiguity_provenance'),
     rawPayload: jsonb('raw_payload'),
     embedding: vector('embedding'),
     altText: text('alt_text'),

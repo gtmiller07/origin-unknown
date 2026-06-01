@@ -32,6 +32,22 @@ export const AXIS_LABELS: Record<AxisKey, string> = {
 };
 
 /**
+ * Authorship taxonomy value sets (migration 0010), shared by the zod schema and
+ * the tool input schema so the wire contract has a single source of truth. These
+ * are flat string enums: unlike a nested object or array, a primitive enum field
+ * cannot be double-encoded or restructured by the forced-tool-use quirk.
+ */
+export const AUTHORSHIP_CLASSES = [
+  'individual_creator',
+  'community_collective',
+  'commercial_institutional',
+  'state_affiliated',
+  'ambiguous_unattributable',
+] as const;
+export const AI_MEDIATIONS = ['human_made', 'ai_assisted', 'ai_generated', 'unknown'] as const;
+export const ORIGIN_AMBIGUITIES = ['none', 'low', 'high'] as const;
+
+/**
  * One axis result. `value` is lenient on range (the model is steered into
  * [0, 1] by the tool schema and the persistence layer clamps) but strict that a
  * score is either a number or an explicit null — never silently missing.
@@ -70,6 +86,9 @@ const FlatScoringSchema = z.object({
   alt_text: z.string().min(1),
   bears_on_dissertation_question: z.boolean(),
   dissertation_relevance: z.string(),
+  authorship_class: z.enum(AUTHORSHIP_CLASSES),
+  ai_mediation: z.enum(AI_MEDIATIONS),
+  origin_ambiguity: z.enum(ORIGIN_AMBIGUITIES),
 });
 
 /**
@@ -104,6 +123,9 @@ export const ScoringResultSchema = FlatScoringSchema.transform((f) => ({
   alt_text: f.alt_text,
   bears_on_dissertation_question: f.bears_on_dissertation_question,
   dissertation_relevance: f.dissertation_relevance,
+  authorship_class: f.authorship_class,
+  ai_mediation: f.ai_mediation,
+  origin_ambiguity: f.origin_ambiguity,
 }));
 
 export type ScoringResult = z.infer<typeof ScoringResultSchema>;
@@ -168,6 +190,24 @@ export const SCORING_TOOL: Anthropic.Tool = {
         type: 'string',
         description: 'One or two sentences explaining the relevance (or its absence).',
       },
+      authorship_class: {
+        type: 'string',
+        enum: [...AUTHORSHIP_CLASSES],
+        description:
+          'Who made this, insofar as a typical viewer could tell: individual_creator, community_collective, commercial_institutional, state_affiliated, or ambiguous_unattributable (use when attribution is genuinely indeterminable, not as a low-effort fallback).',
+      },
+      ai_mediation: {
+        type: 'string',
+        enum: [...AI_MEDIATIONS],
+        description:
+          'Degree of AI involvement: human_made, ai_assisted, ai_generated, or unknown (only when the artifact gives no reliable signal).',
+      },
+      origin_ambiguity: {
+        type: 'string',
+        enum: [...ORIGIN_AMBIGUITIES],
+        description:
+          "How hard it is to recover the artifact's cultural, computational, and geographic origin: none, low, or high.",
+      },
     },
     required: [
       ...flatAxisRequired,
@@ -175,6 +215,9 @@ export const SCORING_TOOL: Anthropic.Tool = {
       'alt_text',
       'bears_on_dissertation_question',
       'dissertation_relevance',
+      'authorship_class',
+      'ai_mediation',
+      'origin_ambiguity',
     ],
   },
 };
