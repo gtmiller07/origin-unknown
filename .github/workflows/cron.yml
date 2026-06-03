@@ -21,6 +21,7 @@ on:
   schedule:
     - cron: '7 */6 * * *' # ingest
     - cron: '37 */6 * * *' # embeddings
+    - cron: '52 */6 * * *' # scoring
     - cron: '15 0 * * *' # maintenance
   workflow_dispatch:
     inputs:
@@ -31,6 +32,7 @@ on:
         options:
           - ingest
           - embeddings
+          - scoring
           - maintenance
           - all
 
@@ -77,6 +79,7 @@ jobs:
             case "$MATCHED_SCHEDULE" in
               '7 */6 * * *')  GROUP="ingest" ;;
               '37 */6 * * *') GROUP="embeddings" ;;
+              '52 */6 * * *') GROUP="scoring" ;;
               '15 0 * * *')   GROUP="maintenance" ;;
               *) echo "::error::No group mapped to schedule '$MATCHED_SCHEDULE'"; exit 1 ;;
             esac
@@ -86,8 +89,9 @@ jobs:
           case "$GROUP" in
             ingest)      ROUTES=("${INGEST[@]}") ;;
             embeddings)  ROUTES=(generate-embeddings) ;;
+            scoring)     ROUTES=("score-pending?limit=3") ;;
             maintenance) ROUTES=(refresh-cost-window) ;;
-            all)         ROUTES=("${INGEST[@]}" generate-embeddings refresh-cost-window) ;;
+            all)         ROUTES=("${INGEST[@]}" generate-embeddings "score-pending?limit=3" refresh-cost-window) ;;
             *) echo "::error::Unknown target '$GROUP'"; exit 1 ;;
           esac
 
