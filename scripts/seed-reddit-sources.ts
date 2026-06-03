@@ -13,6 +13,12 @@
  *
  * The Reddit adapter needs REDDIT_CLIENT_ID + REDDIT_CLIENT_SECRET (an app-only OAuth app);
  * without them ingestion degrades to empty, so seed first and the credentials light it up.
+ * Access note (2026): under Reddit's 2025 "Responsible Builder" policy the app must be
+ * APPROVED by Reddit before the credentials work, and free-tier access is non-commercial-only
+ * (fine for this scholarly instrument). Reddit's Data API terms also restrict redistribution:
+ * ingest + analyze freely, but the published/archived corpus (corpus_snapshots / Zenodo) must
+ * carry only DERIVED or AGGREGATE Reddit data (scores, counts, language/origin features),
+ * never raw post text.
  *
  * Like db-verify, this runs against the real DB via MIGRATION_DATABASE_URL.
  *

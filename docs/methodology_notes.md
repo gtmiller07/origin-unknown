@@ -117,4 +117,119 @@ the database, and every score already produced are unchanged.*
    change the axes or invalidate existing scores, but because it edits an active prompt
    it is listed here for approval rather than applied.
 
-No other instrument changes are proposed.
+3. **Name credibility explicitly (or document it as the compositional target).** The field's
+   load-bearing concept — Cull's "credibility cannot be manufactured," the Al Jazeera
+   credibility paradox (an instrument is valuable only insofar as it does not appear to serve
+   its sponsor), and the AI debate's claim that ambiguous origin makes "the provenance
+   credibility depends on" unrecoverable — is not a named axis. We measure its *inputs* (origin,
+   diplomatic_authenticity, authorship_class, origin_ambiguity) but not the synthesis the field
+   treats as the actual variable. Candidate: add a credibility dimension (artifact-level
+   credibility *affordances* — legible origin, authority markers, apparent independence from an
+   obvious sponsor), or document credibility as the compositional target the existing fields
+   feed so analysis foregrounds it. Adds a field/affordance; does not alter the six axes.
+
+4. **Scope the soft-power / sharp-power boundary.** The field's most active current debate
+   (Walker & Ludwig, 2017) holds that not all cross-boundary influence is attraction — some
+   "pierces" (manipulation, corrosion), and AI is the accelerant of computational propaganda. As
+   built, the axes would score a boundary-crossing AI disinformation piece as diplomatically
+   successful. Candidate: a manipulation/valence flag, or — preferred — an explicit scope
+   statement that the instrument measures *travel and character*, while the soft/sharp
+   legitimacy judgment is a separate layer the artifact alone underdetermines (also the
+   principled answer to the actor-identity critique that soft/sharp maps onto us/them). A flag
+   adds a field; the scope statement is prose only.
+
+5. **Reach-as-proxy discipline; no weighted composite.** Arsenault's measurement dilemma and
+   Bean & Comor warn that the big-data turn "measures what is easy rather than what matters";
+   reach is the easy metric and AI video posts large reach numbers. No rubric change is
+   proposed: keep the six axes independent — a weighted composite would be exactly the "proxy
+   dressed as a measure" the field's rigorous wing distrusts (the Soft Power 30 critique).
+   Record only the interpretive rule — the three *diplomatic* axes (cross_boundary,
+   authenticity, reciprocity) are the construct; origin and reach are enabling conditions;
+   aesthetic_signal is the most provisional axis (weakest field grounding — re-anchor it to
+   origin-legibility / anti-"cultural odorlessness," or retire it if the six ever feel like one
+   too many).
+
+*(Items 3–5 added 2026-06-03 from a review of the instrument against an intellectual-history
+dossier of the public- and cultural-diplomacy field. Candidates for decision only — nothing
+applied; the six axes, the active prompt, the taxonomy, the classifier, and every score already
+produced are unchanged.)*
+
+## Source access & data-use constraints
+
+Operational notes on source access and on *publishing* the corpus — distinct from the scored
+construct above; nothing here changes the rubric, the six axes, the authorship taxonomy, the
+classifier, or any score already produced.
+
+- **Reddit** (`reddit` category). Reddit's Data API has a free tier for non-commercial /
+  research use (≈100 queries/min per OAuth app), which this instrument qualifies for. Two
+  constraints follow from Reddit's current terms: (1) since Reddit's 2025 "Responsible
+  Builder" policy, registering the app requires Reddit's **approval** before the credentials
+  function, and free-tier use must stay **non-commercial**; (2) Reddit restricts
+  **redistribution** of content, so Reddit artifacts may be ingested and analyzed, but the
+  **published and archived corpus** (`corpus_snapshots`, Zenodo DOI) must contain only
+  *derived or aggregate* Reddit data — never raw post text. The export pipeline must enforce
+  this when built.
+- **General principle.** Corpus publication respects each source's redistribution terms. CC0
+  museum objects (Met, Cleveland) are freely redistributable; state-media RSS, YouTube/Vimeo
+  metadata, and Reddit text are retained for analysis but published only as derived features
+  or short fair-use excerpts, per each provider's terms. This is a *publication-time*
+  constraint, not an *ingestion-time* one — ingestion and scoring are unchanged.
+
+*(Added 2026-06-03; Reddit's access/redistribution terms web-verified the same day against
+Reddit's Data API wiki and the 2025 Responsible Builder policy. Re-verify current terms before
+the public corpus release.)*
+
+## Corpus constituency & early scoring findings
+
+Operational + empirical notes from a constituency audit and the first stratified scoring runs.
+Distinct from the construct above; nothing here changes the rubric, the six axes, the taxonomy,
+the classifier, or any score. Early figures are **directional (n≈30 per cell), not powered.**
+
+**Constituency audit.** The challenger (AI) class was initially image-heavy (≈76% Civitai
+stills) and ~92% English/Western, while the incumbent baseline spanned a dozen mostly-non-Western
+state-media origins — an asymmetry that would have confounded the cross-cultural question. Two
+corrections: (1) cross-cultural AI-film creators were sought and seeded (Spanish, Hindi, Chinese
+TW + mainland, Portuguese), establishing that non-English AI filmmaking is real and diffusing but
+an order of magnitude smaller than the English scene (≤40K vs 266K subs), with **Arabic and
+Korean AI-film still barely emergent** — a finding in itself; (2) a dedicated AI-video stream
+(Civitai video base-models, Vimeo, the AI-film channels) was built so the medium the question
+centers on is represented.
+
+**Corpus-balance policy (rec #4).** Mastodon (≈8,700 grassroots-text posts) is treated as the
+*listening* layer (Cull's first component), lazily gated on demand — the relevance gate already
+triages most of it out of the scored set. Scoring/triage budget is steered to challenger AI-video
+and cross-cultural content by design (stratified scoring targets class × medium, not raw volume),
+so easy-to-firehose text does not crowd out hard-to-find diverse AI video.
+
+**Early media-matched scoring** (six-axis means, n≈30/cell, video vs video):
+
+| axis | AI-video (Western) | AI-video (non-English) | incumbent broadcaster | ambiguous |
+|---|--:|--:|--:|--:|
+| origin | 0.46 | 0.63 | 0.78 | 0.55 |
+| reach | 0.31 | 0.20 | 0.40 | 0.25 |
+| aesthetic_signal | 0.55 | 0.31 | 0.28 | 0.29 |
+| diplomatic_cross_boundary | 0.19 | 0.21 | 0.45 | 0.24 |
+| diplomatic_authenticity | 0.33 | 0.39 | 0.43 | 0.27 |
+| diplomatic_reciprocity | 0.07 | 0.08 | 0.12 | 0.08 |
+
+Reads (directional): (i) cross-boundary is the one axis where human institutional media clearly
+leads everything — AI video is not yet doing the cross-border diplomatic work; (ii) Western AI's
+edge is aesthetic novelty, but it is the most "odorless" (lowest origin/authenticity); (iii)
+non-Western AI is more culturally *rooted* (origin + authenticity near human levels) but
+lower-reach and less polished; (iv) reciprocity is near-zero across the board. **Working thesis:**
+AI is democratizing culturally-authentic *production* globally faster than the cross-border
+diplomatic *reach* institutions still hold; within AI, polish/reach skew Western while
+authenticity skews non-Western. Caveats: small n; the incumbent here is international broadcasters
+built for cross-border (a high bar); AI narrative film vs news is a genre mismatch.
+
+**Ambiguous-video mining (rec #2).** A sample of the ~1,884 ambiguous-video pool classified
+≈53% AI — on the order of ~1,000 more AI videos are recoverable from it (Vimeo films + AI video
+on Mastodon/Bluesky). Full classification is incremental (cron + targeted batches), not a burst.
+
+**On `aesthetic_signal` (revises Proposed-change #5).** Flagged in the dossier review as the
+weakest-grounded axis, it is in fact the *most discriminating* one — where AI most diverges from
+incumbent media, and where Western and non-Western AI diverge from each other. Recommendation:
+**keep it, re-anchored as "stylistic distinctiveness / where AI diverges,"** rather than retire it.
+
+*(Findings added 2026-06-03 from a corpus-constituency audit + the first stratified scoring runs;
+directional only, n≈30/cell. Nothing here alters the construct or any score.)*

@@ -143,6 +143,66 @@ const SEED: SeedSource[] = [
     notes:
       'High-volume Chinese-language AI music-video channel (55K subs, Singapore) — the music medium plus a non-English, Asian-origin AI creator, both otherwise thin in the challenger class.',
   },
+  // Cross-cultural AI-film cohort (2026-06-03): non-English AI creators, to correct the
+  // mono-English skew of the challenger class. Substantial creators only (nascent 1-2-video
+  // channels skipped); Arabic + Korean AI-film were probed and found barely emergent. Ids
+  // resolved + vetted via the YouTube Data API. Origin is the cultural origin where defensible;
+  // the detected language carries the cross-cultural signal regardless.
+  {
+    name: 'AI Cinema — EL IAS [Spanish] (YouTube)',
+    config: {
+      channelIds: ['UCMgXcDVqRVpL0a65jQRV2kg'],
+      originCountryCodes: ['ES'],
+      aiMediation: 'ai_assisted',
+    },
+    notes:
+      'Spanish AI-cinema channel (40K subs) — "IA aplicada al cine"; the largest non-English AI-film creator found.',
+  },
+  {
+    name: 'AI Storytelling — Anomalía Ai [Spanish] (YouTube)',
+    config: { channelIds: ['UCyLfLxtsFlapE2vxh3vnyrA'], aiMediation: 'ai_assisted' },
+    notes:
+      'Spanish-language AI visual storyteller (21K subs); region unstated, so origin rides in the detected language.',
+  },
+  {
+    name: 'AI Films — Sanatan [Hindi] (YouTube)',
+    config: {
+      channelIds: ['UC9FW6x-Hwq_qdiA94o8Ex4Q'],
+      originCountryCodes: ['IN'],
+      aiMediation: 'ai_assisted',
+    },
+    notes:
+      'Hindi AI films on Indian/dharmic themes (4.5K subs; diaspora creator, Indian cultural origin).',
+  },
+  {
+    name: 'AI Films — AI導演研究所 [Chinese/TW] (YouTube)',
+    config: {
+      channelIds: ['UCvDDRCRr7L89w8fgCqQHIAA'],
+      originCountryCodes: ['TW'],
+      aiMediation: 'ai_assisted',
+    },
+    notes:
+      'Traditional-Chinese AI "director studio" (Taiwan, 3.2K subs, 196 videos) — a non-mainland Chinese-language AI-film voice.',
+  },
+  {
+    name: 'AI Films — UnderGround [Portuguese/BR] (YouTube)',
+    config: {
+      channelIds: ['UCRp97lxoUd2lNUxvcasimdg'],
+      originCountryCodes: ['BR'],
+      aiMediation: 'ai_assisted',
+    },
+    notes: 'Brazilian Portuguese AI films (1.6K subs) — Lusophone Latin-American AI storytelling.',
+  },
+  {
+    name: 'AI Films — 追光剧场 [Chinese/CN] (YouTube)',
+    config: {
+      channelIds: ['UC4qqBg-pq-FPhntF3V3Rj5g'],
+      originCountryCodes: ['CN'],
+      aiMediation: 'ai_assisted',
+    },
+    notes:
+      'Mainland-Chinese AI cinematic storytelling (simplified Chinese; small/nascent but the clearest mainland-CN AI-film voice found).',
+  },
 ];
 
 async function main() {
