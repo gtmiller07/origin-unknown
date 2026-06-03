@@ -76,21 +76,45 @@ function extractThumbnail(item: Node): string | undefined {
   return undefined;
 }
 
+/**
+ * Resolve an item's publish date. RSS date tags vary in case (China Daily emits a
+ * lowercase <pubdate>) so we match case-insensitively; and some feeds omit item dates
+ * entirely (Press TV), so we fall back to a /YYYY/MM/DD/ path in the article link.
+ */
+function rssPublishedAt(item: Node, contentUrl: string | null): string | null {
+  for (const key of Object.keys(item)) {
+    const k = key.toLowerCase();
+    if (k === 'pubdate' || k === 'dc:date' || k === 'date' || k === 'published' || k === 'issued') {
+      const parsed = parseDate(item[key]);
+      if (parsed) return parsed;
+    }
+  }
+  if (contentUrl) {
+    const m = contentUrl.match(/\/(20\d{2})\/(\d{1,2})\/(\d{1,2})(?:\/|$)/);
+    if (m) {
+      const parsed = parseDate(`${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`);
+      if (parsed) return parsed;
+    }
+  }
+  return null;
+}
+
 function normalizeRssItem(item: Node, opts: ParseOptions): NormalizedArtifact | null {
   const externalId = textOf(item.guid) ?? textOf(item.link) ?? textOf(item.title);
   if (!externalId) return null;
   const title = textOf(item.title) ?? null;
   const description = stripHtml(textOf(item.description) ?? textOf(item['content:encoded']));
+  const contentUrl = textOf(item.link) ?? null;
   return {
     externalId,
     title,
     description,
-    contentUrl: textOf(item.link) ?? null,
+    contentUrl,
     thumbnailUrl: extractThumbnail(item) ?? null,
     mediaType: 'text',
     languageCodes: detectLanguageCodes(`${title ?? ''} ${description ?? ''}`),
     originCountryCodes: opts.originCountryCodes ?? null,
-    publishedAt: parseDate(item.pubDate ?? item['dc:date']),
+    publishedAt: rssPublishedAt(item, contentUrl),
     isAiGenerated: null,
     rawPayload: item,
   };
