@@ -35,7 +35,10 @@ export async function runSourceIngest(
   const runId = await startRun(source.id);
   try {
     const { items, errors } = await fetcher(source);
-    const ingested = await upsertArtifacts(source.id, items);
+    // Carry the source's authorship-origin prior (if any) into the upsert so its artifacts
+    // are classed (challenger/incumbent) at ingest instead of all landing ambiguous.
+    const cfg = (source.config ?? {}) as { aiMediation?: string };
+    const ingested = await upsertArtifacts(source.id, items, { aiMediationPrior: cfg.aiMediation });
     const status: RunStatus = errors.length === 0 ? 'success' : ingested > 0 ? 'partial' : 'failed';
     await completeRun(runId, { status, artifactsIngested: ingested, errors });
     await markSourceRun(source.id, status !== 'failed');

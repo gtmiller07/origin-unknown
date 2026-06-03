@@ -64,6 +64,36 @@ const SEED: SeedSource[] = [
     config: { channelIds: ['UCzznO4xSV8BKnUBPyswtCUw'], originCountryCodes: ['KR'] },
     notes: 'South Korean public diplomacy broadcaster (Arirang); official English news channel.',
   },
+  // AI-film creator channels — the AI-mediated moving-image *challenger* class (human-directed,
+  // AI-generated video), tagged ai_assisted so they classify as challengers at ingest rather
+  // than landing ambiguous. Distinct from the state/public broadcasters above (the incumbent
+  // baseline). Channel ids resolved + vetted live via the YouTube Data API.
+  {
+    name: 'The Dor Brothers (YouTube)',
+    config: {
+      channelIds: ['UCNMK68M-Al4hRUcew07TnUA'],
+      originCountryCodes: ['DE'],
+      aiMediation: 'ai_assisted',
+    },
+    notes:
+      'Berlin AI-film studio (Runway/Veo-driven narrative shorts, music videos, satire). Human-directed, AI-generated video → challenger class. Tens of millions of views.',
+  },
+  {
+    name: 'Neural Viz (YouTube)',
+    config: { channelIds: ['UCC84bgs01Qv2S7byU2rUYig'], aiMediation: 'ai_assisted' },
+    notes:
+      'AI-generated mockumentary universe ("The Monoverse"): human-scripted/directed, AI-generated characters and footage → challenger class. Origin unstated (left unset).',
+  },
+  {
+    name: 'AI on the Lot (YouTube)',
+    config: {
+      channelIds: ['UC1zhq4BVqLNyk61y9X2jhOw'],
+      originCountryCodes: ['US'],
+      aiMediation: 'ai_assisted',
+    },
+    notes:
+      'US showcase of AI-assisted short films from working filmmakers. Human authorship with material generative-AI involvement → challenger class.',
+  },
 ];
 
 async function main() {

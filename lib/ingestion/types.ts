@@ -43,6 +43,15 @@ export interface RunSummary {
   note?: string;
 }
 
+/**
+ * Authorship-origin prior a source may assert on all of its artifacts at ingest, in the
+ * project's ai_mediation taxonomy: 'ai_generated' (fully synthetic output, e.g. Civitai),
+ * 'ai_assisted' (human authorship with material generative-AI involvement, e.g. an
+ * AI-filmmaking channel), 'human_made' (no AI), 'unknown' (unasserted). Persisted as the
+ * artifact's ai_mediation with provenance 'source_prior'; a later scoring pass may override.
+ */
+export type AiMediation = 'ai_generated' | 'ai_assisted' | 'human_made' | 'unknown';
+
 export interface RssSourceConfig {
   feeds: string[];
   originCountryCodes?: string[];
@@ -62,6 +71,13 @@ export interface YoutubeSourceConfig {
   channelIds: string[];
   /** ISO 3166-1 alpha-2 codes applied to every artifact from this source. */
   originCountryCodes?: string[];
+  /**
+   * Authorship-origin prior for every video from this source. YouTube hosts both human and
+   * AI-mediated video, so — unlike Civitai, which has a blanket per-adapter AI-generated flag
+   * — an AI-film channel must declare 'ai_assisted'/'ai_generated' here to be classed as a
+   * challenger at ingest. Absent means unasserted (the video stays ambiguous → relevance gate).
+   */
+  aiMediation?: AiMediation;
 }
 
 export interface RedditSourceConfig {
@@ -127,6 +143,14 @@ export interface CivitaiSourceConfig {
   period?: 'AllTime' | 'Year' | 'Month' | 'Week' | 'Day';
   /** Max images to pull per run (1–200; defaults to 100). */
   limit?: number;
+  /**
+   * Optional Civitai base-model filter (OR-combined; the param is repeated per value). Each
+   * string is matched against the model an item was generated with; filtering to the on-site
+   * video base models — ['Hunyuan Video', 'Wan Video', 'LTXV', 'CogVideoX', 'Mochi', 'Vidu Q1']
+   * — turns the shared image+video feed into a near-pure AI-video stream (≈99% video observed).
+   * The adapter still tags each item's media_type per row. Absent means no model filter.
+   */
+  baseModels?: string[];
   /** ISO 3166-1 alpha-2 codes; usually unset — Civitai is a mixed-origin global commons. */
   originCountryCodes?: string[];
 }

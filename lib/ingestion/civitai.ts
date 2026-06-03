@@ -166,6 +166,13 @@ export async function fetchCivitaiArtifacts(source: Source): Promise<FetchResult
   url.searchParams.set('period', period);
   // Safe-only at the source; the normalizer drops anything that slips through.
   url.searchParams.set('nsfw', 'None');
+  // Optional base-model filter (OR-combined): repeating `baseModels` narrows the shared
+  // image+video feed to specific models — used to pull a near-pure AI-video stream.
+  for (const baseModel of config.baseModels ?? []) {
+    if (typeof baseModel === 'string' && baseModel.trim()) {
+      url.searchParams.append('baseModels', baseModel.trim());
+    }
+  }
 
   try {
     const images = await fetchImages(url);

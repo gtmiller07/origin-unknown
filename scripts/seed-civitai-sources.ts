@@ -47,6 +47,33 @@ const SEED: SeedSource[] = [
     notes:
       'The freshest safe AI-generated images on Civitai — a steady incremental stream of new generative output, deduped across runs.',
   },
+  // AI *video* feeds: same endpoint, filtered to the on-site video base models so the shared
+  // image+video stream comes back ≈99% video. Generative moving-image storytelling is the
+  // medium at the center of the research question, so it gets dedicated slices.
+  {
+    name: 'AI Video — Newest (Civitai)',
+    config: {
+      provider: 'civitai',
+      sort: 'Newest',
+      period: 'Week',
+      limit: 100,
+      baseModels: ['Hunyuan Video', 'Wan Video', 'LTXV', 'CogVideoX', 'Mochi', 'Vidu Q1'],
+    },
+    notes:
+      'The freshest safe AI-generated video on Civitai, filtered to the on-site video base models (Hunyuan, Wan, LTXV, CogVideoX, Mochi, Vidu) — a steady incremental stream of AI-mediated moving-image output, deduped across runs.',
+  },
+  {
+    name: 'AI Video — Most Reactions (Civitai)',
+    config: {
+      provider: 'civitai',
+      sort: 'Most Reactions',
+      period: 'Month',
+      limit: 100,
+      baseModels: ['Hunyuan Video', 'Wan Video', 'LTXV', 'CogVideoX', 'Mochi', 'Vidu Q1'],
+    },
+    notes:
+      'The month’s most-reacted safe AI-generated video on Civitai (same video base-model filter) — the generative moving-image artifacts resonating most in the open commons.',
+  },
 ];
 
 async function main() {

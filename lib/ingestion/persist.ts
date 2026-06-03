@@ -52,13 +52,27 @@ export async function markSourceRun(sourceId: string, success: boolean): Promise
 }
 
 /**
- * Upsert by (sourceId, externalId). Re-ingest refreshes source-derived content
- * but deliberately leaves embedding, status, and curatorial fields untouched.
- * Returns the number of rows inserted or updated.
+ * Source-level options for {@link upsertArtifacts}.
+ */
+export interface UpsertOptions {
+  /**
+   * Authorship-origin prior asserted by the source, applied to inserted artifacts as their
+   * ai_mediation value with provenance 'source_prior'. A per-artifact AI-origin flag
+   * (isAiGenerated === true → 'ai_generated') takes precedence. Applied on INSERT only: a
+   * re-ingest never overwrites an ai_mediation a scoring pass or manual backfill assigned.
+   */
+  aiMediationPrior?: string | null;
+}
+
+/**
+ * Upsert by (sourceId, externalId). Re-ingest refreshes source-derived content but
+ * deliberately leaves embedding, status, curatorial, and authorship (ai_mediation) fields
+ * untouched. Returns the number of rows inserted or updated.
  */
 export async function upsertArtifacts(
   sourceId: string,
-  items: NormalizedArtifact[]
+  items: NormalizedArtifact[],
+  opts: UpsertOptions = {}
 ): Promise<number> {
   if (!items.length) return 0;
   // A single ON CONFLICT DO UPDATE cannot touch the same (sourceId, externalId)
@@ -66,6 +80,13 @@ export async function upsertArtifacts(
   // before insert — last occurrence wins.
   const deduped = new Map<string, NewArtifact>();
   for (const item of items) {
+    // Authorship-origin prior, written once at ingest so challenger (ai_generated/ai_assisted)
+    // and incumbent (human_made) artifacts skip the relevance gate's Haiku triage. The
+    // per-artifact flag is the strongest signal (Civitai marks every image/video
+    // AI-generated); otherwise fall back to the source's declared prior; no signal → null
+    // (ambiguous), exactly as before this option existed.
+    const aiMediation =
+      item.isAiGenerated === true ? 'ai_generated' : (opts.aiMediationPrior ?? null);
     deduped.set(item.externalId, {
       sourceId,
       externalId: item.externalId,
@@ -78,6 +99,8 @@ export async function upsertArtifacts(
       originCountryCodes: item.originCountryCodes ?? null,
       publishedAt: item.publishedAt ?? null,
       isAiGenerated: item.isAiGenerated ?? null,
+      aiMediation,
+      aiMediationProvenance: aiMediation ? 'source_prior' : null,
       rawPayload: item.rawPayload ?? null,
     });
   }
@@ -98,6 +121,9 @@ export async function upsertArtifacts(
         originCountryCodes: sql`excluded.origin_country_codes`,
         publishedAt: sql`excluded.published_at`,
         rawPayload: sql`excluded.raw_payload`,
+        // ai_mediation / ai_mediation_provenance are intentionally NOT refreshed here: the
+        // prior is an insert-time seed, so a re-ingest must not clobber a value the scorer
+        // (provenance 'model') or a manual backfill later assigned.
         updatedAt: new Date().toISOString(),
       },
     })
