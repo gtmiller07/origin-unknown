@@ -9,7 +9,7 @@
  * exactly one artifact fits per serverless request, so DEFAULT_LIMIT is 1;
  * bulk/backlog scoring runs locally with no time ceiling via `npm run score`.
  */
-import { and, desc, eq, isNotNull } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull } from 'drizzle-orm';
 import { scoreArtifactContent } from '../ai/claude';
 import { isCapped } from '../cost/caps';
 import { db } from '../db/client';
@@ -92,7 +92,7 @@ function normalizeToolInput(raw: unknown): unknown {
 }
 
 export async function scorePendingArtifacts(
-  opts: { limit?: number; maxAttempts?: number } = {}
+  opts: { limit?: number; maxAttempts?: number; artifactIds?: string[] } = {}
 ): Promise<ScoreSummary> {
   const limit = opts.limit ?? DEFAULT_LIMIT;
   const maxAttempts = Math.max(1, opts.maxAttempts ?? DEFAULT_MAX_ATTEMPTS);
@@ -146,11 +146,21 @@ export async function scorePendingArtifacts(
     // rows. gate_decision is orthogonal to status (see migration 0012), hence a
     // separate predicate rather than a new status value.
     .where(
-      and(
-        isNotNull(artifacts.embedding),
-        eq(artifacts.status, 'pending'),
-        eq(artifacts.gateDecision, 'include')
-      )
+      // A targeted research sample (artifactIds) is scored regardless of gate decision —
+      // only the embedding + still-pending requirements apply, so a deliberate stratified
+      // sample can be scored. The default path (no ids) keeps the gate as the eligibility
+      // filter so routine scoring never lands on triaged-out or not-yet-gated rows.
+      opts.artifactIds && opts.artifactIds.length > 0
+        ? and(
+            isNotNull(artifacts.embedding),
+            eq(artifacts.status, 'pending'),
+            inArray(artifacts.id, opts.artifactIds)
+          )
+        : and(
+            isNotNull(artifacts.embedding),
+            eq(artifacts.status, 'pending'),
+            eq(artifacts.gateDecision, 'include')
+          )
     )
     .limit(limit);
 
