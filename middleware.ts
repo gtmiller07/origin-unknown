@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { type NextRequest, NextResponse } from 'next/server';
 
 const CSP = [
   "default-src 'self'",
@@ -8,7 +8,7 @@ const CSP = [
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: blob: https://*.supabase.co https://i.ytimg.com https://img.youtube.com",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.sentry.io https://*.upstash.io",
-  "frame-src https://www.youtube-nocookie.com https://www.tiktok.com",
+  'frame-src https://www.youtube-nocookie.com https://www.tiktok.com',
   "media-src 'self' blob: https://*.supabase.co",
 ].join('; ');
 
@@ -17,7 +17,12 @@ const MOBILE_UA = /Android|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i;
 
 export async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
-  const response = NextResponse.next();
+  // Forward the current pathname to server components via a request header. The admin
+  // layout reads x-pathname to exempt /admin/login from its auth guard — without it,
+  // an unauthenticated request to the login page redirects to itself in a loop.
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-pathname', pathname);
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
 
   // CSP header on all responses
   response.headers.set('Content-Security-Policy', CSP);
@@ -28,9 +33,7 @@ export async function middleware(request: NextRequest) {
   if (pathname === '/tunnel' && !searchParams.get('mode')) {
     const ua = request.headers.get('user-agent') ?? '';
     if (MOBILE_UA.test(ua)) {
-      return NextResponse.redirect(
-        new URL('/tunnel?mode=flat&notice=mobile', request.url)
-      );
+      return NextResponse.redirect(new URL('/tunnel?mode=flat&notice=mobile', request.url));
     }
   }
 
@@ -72,22 +75,23 @@ export async function middleware(request: NextRequest) {
   }
 
   // Supabase session refresh for auth routes
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          );
-        },
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set');
+  }
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
       },
-    }
-  );
+      setAll(cookiesToSet) {
+        for (const { name, value, options } of cookiesToSet) {
+          response.cookies.set(name, value, options);
+        }
+      },
+    },
+  });
 
   await supabase.auth.getUser();
 
@@ -95,7 +99,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 };
