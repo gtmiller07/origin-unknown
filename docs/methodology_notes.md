@@ -93,11 +93,17 @@ against publisher/journal listings: Cull, *Reputational Security* (Polity Press,
 names (Dedalus / Pygmalion / Heracles) were confirmed from those listings; a final pass
 against each source's full text remains advisable before formal citation.
 
-## Proposed instrument changes, pending approval
+## Proposed instrument changes — decided 2026-06-03
 
-*Nothing in this section has been applied. These are candidates for your decision; the
-active scoring prompt, the six axes, the authorship taxonomy, the relevance classifier,
-the database, and every score already produced are unchanged.*
+*Decisions (2026-06-03): items 1, 2, 4, and 5 were ACCEPTED as framing-only changes and shipped
+as scoring prompt v1.2 (migration 0015, deactivating v1.1). They touch prose / citations /
+wording — not the six axes' scales — so existing v1.1 scores remain comparable (and are tagged
+per row via `scores.scoring_prompt_version`); nothing was re-scored. Item 3 (credibility) was
+decided as **documented synthesis, not a new axis**: the six axes stand, and credibility is
+treated as the compositional target that `origin` + `diplomatic_authenticity` +
+`authorship_class` feed — foregrounded in analysis, not separately scored (avoids proliferating
+proxies, per the field's own measurement caution). The original proposals are retained below
+for the record.*
 
 1. **Vocabulary hygiene in the prose framing (Cull).** The active prompt and the public
    site copy lean on "soft power" as a framing term. In light of Cull (2024), we may
