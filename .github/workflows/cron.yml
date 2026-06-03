@@ -89,9 +89,9 @@ jobs:
           case "$GROUP" in
             ingest)      ROUTES=("${INGEST[@]}") ;;
             embeddings)  ROUTES=(generate-embeddings) ;;
-            scoring)     ROUTES=("score-pending?limit=3") ;;
+            scoring)     ROUTES=("score-pending?limit=1") ;;
             maintenance) ROUTES=(refresh-cost-window) ;;
-            all)         ROUTES=("${INGEST[@]}" generate-embeddings "score-pending?limit=3" refresh-cost-window) ;;
+            all)         ROUTES=("${INGEST[@]}" generate-embeddings "score-pending?limit=1" refresh-cost-window) ;;
             *) echo "::error::Unknown target '$GROUP'"; exit 1 ;;
           esac
 
