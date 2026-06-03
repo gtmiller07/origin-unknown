@@ -39,11 +39,7 @@ export default function HomePage() {
       {/* Epigraph */}
       <section className={styles.epigraph} aria-label="Epigraph">
         {EPIGRAPH_LINES.map((line, i) => (
-          <p
-            key={i}
-            className={styles.epigraphLine}
-            style={{ animationDelay: `${i * 0.18}s` }}
-          >
+          <p key={line} className={styles.epigraphLine} style={{ animationDelay: `${i * 0.18}s` }}>
             {line}
           </p>
         ))}
@@ -60,7 +56,9 @@ export default function HomePage() {
 
       {/* Finding line — placeholder until corpus is populated */}
       <p className={styles.findingLine} aria-live="polite">
-        <em>The instrument is starting up. The first artifacts will appear after the corpus is seeded.</em>
+        <em>
+          The instrument is starting up. The first artifacts will appear after the corpus is seeded.
+        </em>
       </p>
 
       {/* Entry affordance */}

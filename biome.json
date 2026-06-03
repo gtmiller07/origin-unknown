@@ -24,6 +24,12 @@
     }
   },
   "files": {
-    "ignore": ["node_modules", ".next", "out", "supabase/migrations/*.sql"]
+    "ignore": [
+      "node_modules",
+      ".next",
+      "out",
+      "supabase/migrations/*.sql",
+      "supabase/migrations/meta/**"
+    ]
   }
 }

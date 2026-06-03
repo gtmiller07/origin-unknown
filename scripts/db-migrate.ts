@@ -13,7 +13,7 @@
  * the transaction pooler. Set MIGRATION_DATABASE_URL for that, otherwise the
  * runner falls back to DATABASE_URL.
  */
-import { readdir, readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import postgres from 'postgres';
 
@@ -70,9 +70,7 @@ async function main() {
       (await sql<{ name: string }[]>`SELECT name FROM _migrations`).map((r) => r.name)
     );
 
-    const files = (await readdir(MIGRATIONS_DIR))
-      .filter((f) => f.endsWith('.sql'))
-      .sort();
+    const files = (await readdir(MIGRATIONS_DIR)).filter((f) => f.endsWith('.sql')).sort();
 
     let ran = 0;
     for (const file of files) {

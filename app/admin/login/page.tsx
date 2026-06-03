@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { useState } from 'react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -25,7 +25,15 @@ export default function LoginPage() {
 
   return (
     <div style={{ maxWidth: '400px', margin: '8rem auto', padding: '0 1.5rem' }}>
-      <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 300, fontStyle: 'italic', fontSize: '1.75rem', marginBottom: '2rem' }}>
+      <h1
+        style={{
+          fontFamily: 'var(--font-serif)',
+          fontWeight: 300,
+          fontStyle: 'italic',
+          fontSize: '1.75rem',
+          marginBottom: '2rem',
+        }}
+      >
         Curator access
       </h1>
       {sent ? (
@@ -34,10 +42,20 @@ export default function LoginPage() {
         </p>
       ) : (
         <form onSubmit={handleSubmit}>
-          <label style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#737373', display: 'block', marginBottom: '0.5rem' }}>
+          <label
+            htmlFor="email"
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.75rem',
+              color: '#737373',
+              display: 'block',
+              marginBottom: '0.5rem',
+            }}
+          >
             Email
           </label>
           <input
+            id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -55,11 +73,22 @@ export default function LoginPage() {
               marginBottom: '2rem',
               boxSizing: 'border-box',
             }}
-            onFocus={(e) => (e.target.style.borderBottomWidth = '2px')}
-            onBlur={(e) => (e.target.style.borderBottomWidth = '1px')}
+            onFocus={(e) => {
+              e.target.style.borderBottomWidth = '2px';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderBottomWidth = '1px';
+            }}
           />
           {error && (
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: '#B85C3B', marginBottom: '1rem' }}>
+            <p
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.8rem',
+                color: '#B85C3B',
+                marginBottom: '1rem',
+              }}
+            >
               {error}
             </p>
           )}

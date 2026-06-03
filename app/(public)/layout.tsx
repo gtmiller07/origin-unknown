@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Source_Serif_4, JetBrains_Mono } from 'next/font/google';
+import { JetBrains_Mono, Source_Serif_4 } from 'next/font/google';
 import '@/app/globals.css';
 
 const sourceSerif = Source_Serif_4({
@@ -36,7 +36,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
     <html lang="en" className={`${sourceSerif.variable} ${jetbrainsMono.variable}`}>
       <body>
         <nav aria-label="Site navigation" className="site-nav">
-          <a href="/" className="nav-title">Origin Unknown</a>
+          <a href="/" className="nav-title">
+            Origin Unknown
+          </a>
           <div className="nav-links">
             <a href="/tunnel">Tunnel</a>
             <a href="/live">Live feed</a>

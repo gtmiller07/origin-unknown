@@ -22,8 +22,7 @@ function resolveConnectionString(): string {
 
 async function main() {
   const connectionString = resolveConnectionString();
-  const isLocal =
-    connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
+  const isLocal = connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
 
   let endpoint = '(unparseable)';
   try {
