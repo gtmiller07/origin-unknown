@@ -1,17 +1,18 @@
 import {
-  pgTable,
-  uuid,
-  text,
   boolean,
-  integer,
-  numeric,
-  timestamp,
-  jsonb,
-  date,
-  uniqueIndex,
-  index,
-  pgEnum,
   customType,
+  date,
+  index,
+  integer,
+  jsonb,
+  numeric,
+  pgEnum,
+  pgTable,
+  real,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
 } from 'drizzle-orm/pg-core';
 
 // Alias for clarity throughout schema — always with timezone
@@ -105,6 +106,27 @@ export const artifacts = pgTable(
     aiMediationProvenance: text('ai_mediation_provenance'),
     originAmbiguity: text('origin_ambiguity'),
     originAmbiguityProvenance: text('origin_ambiguity_provenance'),
+    // Relevance gate (migration 0012), ORTHOGONAL to status: records whether the
+    // artifact is eligible for Opus scoring and HOW that was decided
+    // (gate_method: taxonomy_prior | baseline_sample | haiku_triage). NULL = not
+    // yet gated. question_similarity is the demoted cosine-to-the-question feature
+    // — stored for analysis, never a gate cutoff. CHECK constraints live in 0012.
+    gateDecision: text('gate_decision'),
+    gateMethod: text('gate_method'),
+    gateReasoning: text('gate_reasoning'),
+    gateConfidence: numeric('gate_confidence', { precision: 3, scale: 2 }),
+    gateModel: text('gate_model'),
+    gatedAt: timestamptz('gated_at'),
+    // Two-axis triage verdict (migration 0013): Judgment A (cultural storytelling)
+    // and Judgment B (AI mediation / origin ambiguity), kept on A OR B. Stored
+    // per-axis so "which judgment kept this artifact" is recoverable research data;
+    // gate_decision/gate_confidence above hold the collapsed keep + governing
+    // confidence. NULL on rows gated before the two-axis revision.
+    gateCulturalRelevant: boolean('gate_cultural_relevant'),
+    gateCulturalConfidence: numeric('gate_cultural_confidence', { precision: 3, scale: 2 }),
+    gateAiOrAmbiguous: boolean('gate_ai_or_ambiguous'),
+    gateAiConfidence: numeric('gate_ai_confidence', { precision: 3, scale: 2 }),
+    questionSimilarity: real('question_similarity'),
     rawPayload: jsonb('raw_payload'),
     embedding: vector('embedding'),
     altText: text('alt_text'),
@@ -126,6 +148,37 @@ export const artifacts = pgTable(
   ]
 );
 
+// Hand-labeled calibration set (migration 0012): the human ground truth the Haiku
+// relevance threshold is tuned against, persisted as research data. human_relevant
+// is the curator label; the haiku_* columns hold the classifier's verdict on the
+// same artifact so a recall figure / confusion matrix is reproducible from the DB.
+export const relevanceCalibration = pgTable('relevance_calibration', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  artifactId: uuid('artifact_id')
+    .notNull()
+    .references(() => artifacts.id, { onDelete: 'cascade' })
+    .unique(),
+  humanRelevant: boolean('human_relevant').notNull(),
+  humanNotes: text('human_notes'),
+  // Legacy single-axis verdict (migration 0012) — retained for back-compat, no
+  // longer written by the two-axis classifier. haikuReasoning now holds the
+  // one-sentence signal.
+  haikuRelevant: boolean('haiku_relevant'),
+  haikuConfidence: numeric('haiku_confidence', { precision: 3, scale: 2 }),
+  haikuReasoning: text('haiku_reasoning'),
+  haikuModel: text('haiku_model'),
+  // Two-axis verdict (migration 0013): per-axis relevance + confidence so the
+  // calibration sweep recomputes keep from both confidences. haikuKeep is the
+  // model's own keep call, a fixed baseline vs. the tuned-threshold gate.
+  haikuCulturalRelevant: boolean('haiku_cultural_relevant'),
+  haikuCulturalConfidence: numeric('haiku_cultural_confidence', { precision: 3, scale: 2 }),
+  haikuAiOrAmbiguous: boolean('haiku_ai_or_ambiguous'),
+  haikuAiConfidence: numeric('haiku_ai_confidence', { precision: 3, scale: 2 }),
+  haikuKeep: boolean('haiku_keep'),
+  labeledAt: timestamptz('labeled_at').defaultNow(),
+  classifiedAt: timestamptz('classified_at'),
+});
+
 export const scores = pgTable(
   'scores',
   {
@@ -146,14 +199,14 @@ export const scores = pgTable(
     createdAt: timestamptz('created_at').defaultNow(),
     updatedAt: timestamptz('updated_at'),
   },
-  (table) => [
-    uniqueIndex('scores_artifact_axis_idx').on(table.artifactId, table.axis),
-  ]
+  (table) => [uniqueIndex('scores_artifact_axis_idx').on(table.artifactId, table.axis)]
 );
 
 export const evidencePanels = pgTable('evidence_panels', {
   id: uuid('id').primaryKey().defaultRandom(),
-  artifactId: uuid('artifact_id').references(() => artifacts.id, { onDelete: 'cascade' }).unique(),
+  artifactId: uuid('artifact_id')
+    .references(() => artifacts.id, { onDelete: 'cascade' })
+    .unique(),
   provenance: jsonb('provenance'),
   trainingDataNotes: text('training_data_notes'),
   travelHistory: jsonb('travel_history'),
@@ -205,7 +258,11 @@ export const scoringEvents = pgTable(
   },
   (table) => [
     index('scoring_events_artifact_id_created_at_idx').on(table.artifactId, table.createdAt),
-    index('scoring_events_axis_event_type_created_idx').on(table.axis, table.eventType, table.createdAt),
+    index('scoring_events_axis_event_type_created_idx').on(
+      table.axis,
+      table.eventType,
+      table.createdAt
+    ),
   ]
 );
 
@@ -273,9 +330,7 @@ export const curatorNotes = pgTable(
     createdAt: timestamptz('created_at').defaultNow(),
     updatedAt: timestamptz('updated_at'),
   },
-  (table) => [
-    index('curator_notes_published_at_idx').on(table.publishedAt),
-  ]
+  (table) => [index('curator_notes_published_at_idx').on(table.publishedAt)]
 );
 
 export const viewerSessions = pgTable('viewer_sessions', {
@@ -311,8 +366,12 @@ export const costCaps = pgTable('cost_caps', {
   service: text('service').notNull().unique(),
   dailyCapUsd: numeric('daily_cap_usd', { precision: 10, scale: 2 }).notNull(),
   monthlyCapUsd: numeric('monthly_cap_usd', { precision: 10, scale: 2 }).notNull(),
-  currentDailySpendUsd: numeric('current_daily_spend_usd', { precision: 10, scale: 2 }).default('0'),
-  currentMonthlySpendUsd: numeric('current_monthly_spend_usd', { precision: 10, scale: 2 }).default('0'),
+  currentDailySpendUsd: numeric('current_daily_spend_usd', { precision: 10, scale: 2 }).default(
+    '0'
+  ),
+  currentMonthlySpendUsd: numeric('current_monthly_spend_usd', { precision: 10, scale: 2 }).default(
+    '0'
+  ),
   spendWindowStartDate: date('spend_window_start_date').defaultNow(),
   isBreached: boolean('is_breached').default(false),
   breachedAt: timestamptz('breached_at'),
@@ -334,9 +393,7 @@ export const apiCallLog = pgTable(
     errorMessage: text('error_message'),
     occurredAt: timestamptz('occurred_at').defaultNow(),
   },
-  (table) => [
-    index('api_call_log_service_occurred_idx').on(table.service, table.occurredAt),
-  ]
+  (table) => [index('api_call_log_service_occurred_idx').on(table.service, table.occurredAt)]
 );
 
 export const systemState = pgTable('system_state', {
@@ -362,3 +419,5 @@ export type CuratorNote = typeof curatorNotes.$inferSelect;
 export type ViewerSession = typeof viewerSessions.$inferSelect;
 export type CostCap = typeof costCaps.$inferSelect;
 export type SystemState = typeof systemState.$inferSelect;
+export type RelevanceCalibration = typeof relevanceCalibration.$inferSelect;
+export type NewRelevanceCalibration = typeof relevanceCalibration.$inferInsert;

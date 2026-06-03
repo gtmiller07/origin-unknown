@@ -1,5 +1,6 @@
 /**
- * Score artifacts that have an embedding but no scores yet. For each pending
+ * Score artifacts that have an embedding, are gated IN by the relevance gate
+ * (step 2), and have no scores yet. For each such pending
  * artifact we render the active prompt, ask Claude for a structured six-axis
  * judgment, and persist it as a *proposal* — writing only the ai_* columns and
  * leaving value/human_* untouched so re-runs never clobber a human-confirmed
@@ -140,7 +141,17 @@ export async function scorePendingArtifacts(
     })
     .from(artifacts)
     .leftJoin(sources, eq(artifacts.sourceId, sources.id))
-    .where(and(isNotNull(artifacts.embedding), eq(artifacts.status, 'pending')))
+    // The relevance gate (step 2) decides eligibility: only artifacts gated IN are
+    // scored, so expensive Opus spend never lands on triaged-out or not-yet-gated
+    // rows. gate_decision is orthogonal to status (see migration 0012), hence a
+    // separate predicate rather than a new status value.
+    .where(
+      and(
+        isNotNull(artifacts.embedding),
+        eq(artifacts.status, 'pending'),
+        eq(artifacts.gateDecision, 'include')
+      )
+    )
     .limit(limit);
 
   summary.scanned = pending.length;

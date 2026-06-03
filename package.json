@@ -24,6 +24,10 @@
     "ingest": "node --env-file=.env.local --import tsx scripts/ingest.ts",
     "embed": "node --env-file=.env.local --import tsx scripts/embed.ts",
     "score": "node --env-file=.env.local --import tsx scripts/score.ts",
+    "gate": "node --env-file=.env.local --import tsx scripts/gate.ts",
+    "gate:label": "node --env-file=.env.local --import tsx scripts/gate-label.ts",
+    "gate:calibrate": "node --env-file=.env.local --import tsx scripts/gate-calibrate.ts",
+    "sources:health": "node --env-file=.env.local --import tsx scripts/source-health.ts",
     "test": "vitest",
     "test:e2e": "playwright test",
     "prepare": "lefthook install"
