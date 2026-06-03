@@ -85,7 +85,7 @@ jobs:
             esac
           fi
 
-          INGEST=(ingest-rss ingest-bluesky ingest-youtube ingest-reddit ingest-genai-open ingest-mastodon ingest-cultural)
+          INGEST=(ingest-rss ingest-bluesky ingest-youtube ingest-reddit ingest-genai-open ingest-mastodon ingest-cultural ingest-vimeo)
           case "$GROUP" in
             ingest)      ROUTES=("${INGEST[@]}") ;;
             embeddings)  ROUTES=(generate-embeddings) ;;

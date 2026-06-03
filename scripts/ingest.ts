@@ -13,6 +13,7 @@ import { fetchMastodonArtifacts } from '../lib/ingestion/mastodon';
 import { fetchRedditArtifacts } from '../lib/ingestion/reddit';
 import { fetchRssArtifacts } from '../lib/ingestion/rss';
 import type { FetchResult } from '../lib/ingestion/types';
+import { fetchVimeoArtifacts } from '../lib/ingestion/vimeo';
 import { fetchYoutubeArtifacts } from '../lib/ingestion/youtube';
 import { useScriptDatabaseUrl } from './db-env';
 
@@ -24,6 +25,7 @@ const FETCHERS: Record<string, (source: Source) => Promise<FetchResult>> = {
   mastodon: fetchMastodonArtifacts,
   genai_open_api: fetchGenaiOpenArtifacts,
   cultural_institution: fetchCulturalArtifacts,
+  vimeo: fetchVimeoArtifacts,
 };
 
 async function main() {

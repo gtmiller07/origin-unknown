@@ -94,6 +94,55 @@ const SEED: SeedSource[] = [
     notes:
       'US showcase of AI-assisted short films from working filmmakers. Human authorship with material generative-AI involvement → challenger class.',
   },
+  // Second AI-film/AI-music cohort (2026-06-03): more creators + cross-cultural origin (GB, SG)
+  // and the music medium. Channel ids resolved + vetted live via the YouTube Data API
+  // (subscriber count + activity); content-farm and tutorial channels were rejected.
+  {
+    name: 'Curious Refuge (YouTube)',
+    config: {
+      channelIds: ['UClnFtyUEaxQOCd1s5NKYGFA'],
+      originCountryCodes: ['US'],
+      aiMediation: 'ai_assisted',
+    },
+    notes:
+      'The central AI-filmmaking community + host of the AI Film Festival (266K subs). Mixed showcase/education — AI films and festival reels alongside technique breakdowns; the relevance gate and scorer sort per video.',
+  },
+  {
+    name: 'Epic AI Films (YouTube)',
+    config: {
+      channelIds: ['UC5FCyk1QkTBLgWm-w866PGg'],
+      originCountryCodes: ['GB'],
+      aiMediation: 'ai_assisted',
+    },
+    notes:
+      'UK AI filmmaker redefining independent film with generative tools (91K subs) — narrative AI cinema, British origin.',
+  },
+  {
+    name: 'Nova AI Films (YouTube)',
+    config: {
+      channelIds: ['UCoxrPSs31xUUJOYzrZhEi7g'],
+      originCountryCodes: ['US'],
+      aiMediation: 'ai_assisted',
+    },
+    notes:
+      'AI storytelling / cinematic shorts creator (54K subs) — human-directed, AI-generated narrative video.',
+  },
+  {
+    name: 'Director Dave Clark (YouTube)',
+    config: { channelIds: ['UCqrWkLKwRKNZRbbJXVEvAjw'], aiMediation: 'ai_assisted' },
+    notes:
+      'Named AI filmmaker (“Borrowing Time”) publishing generative-AI film explorations (22K subs); origin unstated.',
+  },
+  {
+    name: 'AI Music Video — Chinese (YouTube)',
+    config: {
+      channelIds: ['UCGTFAwLA-8vpGUEBeS-GJeQ'],
+      originCountryCodes: ['SG'],
+      aiMediation: 'ai_assisted',
+    },
+    notes:
+      'High-volume Chinese-language AI music-video channel (55K subs, Singapore) — the music medium plus a non-English, Asian-origin AI creator, both otherwise thin in the challenger class.',
+  },
 ];
 
 async function main() {

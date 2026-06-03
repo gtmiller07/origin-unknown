@@ -141,6 +141,56 @@ const SEED: SeedSource[] = [
     config: { feeds: ['https://en.yna.co.kr/RSS/news.xml'], originCountryCodes: ['KR'] },
     notes: 'Semi-governmental South Korean news agency, English service.',
   },
+  // --- Cross-cultural expansion (2026-06-03): Global South + India/Japan, to balance the
+  // East-Asia/Mideast/Europe-heavy baseline. State/public broadcasters where one exists;
+  // major national press as the stand-in where a country has no state international feed
+  // (India, Japan). Each feed probed live (HTTP 200 + parseable RSS, recent items) before
+  // inclusion. Origin is the outlet's editorial base; per-article origin is not derived here.
+  // --- Latin America ---
+  {
+    name: 'teleSUR English',
+    config: { feeds: ['https://www.telesurenglish.net/feed/'], originCountryCodes: ['VE'] },
+    notes:
+      'Venezuelan state-funded pan-Latin-American broadcaster — an explicitly counter-hegemonic state voice; a strong cross-cultural contrast to Western and East-Asian state media.',
+  },
+  {
+    name: 'Agência Brasil',
+    config: {
+      feeds: ['https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml'],
+      originCountryCodes: ['BR'],
+    },
+    notes: 'Brazil’s public news agency (EBC, state-owned) — Lusophone Global-South public media.',
+  },
+  // --- Africa ---
+  {
+    name: 'Africanews',
+    config: { feeds: ['https://www.africanews.com/feed/rss'], originCountryCodes: ['CG'] },
+    notes:
+      'Pan-African English broadcaster (HQ Pointe-Noire, Congo-Brazzaville; Euronews-affiliated) — multi-country African origin, otherwise absent from the corpus.',
+  },
+  // --- Southeast Asia ---
+  {
+    name: 'Channel NewsAsia',
+    config: {
+      feeds: ['https://www.channelnewsasia.com/rssfeeds/8395986'],
+      originCountryCodes: ['SG'],
+    },
+    notes: 'Singapore’s English-language international broadcaster (Mediacorp, state-owned).',
+  },
+  // --- India (no state international broadcaster; reputable national press as stand-in) ---
+  {
+    name: 'The Hindu',
+    config: { feeds: ['https://www.thehindu.com/feeder/default.rss'], originCountryCodes: ['IN'] },
+    notes:
+      'Major Indian national daily (private, Chennai). India has no CGTN-style state international broadcaster; The Hindu is the reputable incumbent-press stand-in for Indian origin.',
+  },
+  // --- Japan (NHK World offers no stable public RSS; national press as stand-in) ---
+  {
+    name: 'The Japan Times',
+    config: { feeds: ['https://www.japantimes.co.jp/feed/'], originCountryCodes: ['JP'] },
+    notes:
+      'Japan’s oldest English-language daily (private) — incumbent-press stand-in for Japanese origin.',
+  },
 ];
 
 async function main() {

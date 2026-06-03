@@ -56,6 +56,30 @@ const SEED: SeedSource[] = [
     notes:
       'Public discourse about artificial intelligence and its cultural impact — how the AI mediation this project measures is itself debated.',
   },
+  // User-generated *content*, not just discourse — the two storytelling classes the research
+  // question turns on. Tagged with an ai_mediation prior so they classify at ingest instead of
+  // landing ambiguous: AI-generation communities → challenger (ai_assisted), human-fiction
+  // communities → incumbent (human_made). (Dormant until REDDIT_CLIENT_ID/SECRET are set.)
+  {
+    name: 'AI-Generated Media (Reddit)',
+    config: {
+      subreddits: ['aivideo', 'StableDiffusion', 'midjourney', 'aiArt'],
+      listing: 'new',
+      aiMediation: 'ai_assisted',
+    },
+    notes:
+      'User-generated AI image/video communities — the Reddit counterpart to Civitai and the AI-film YouTube channels. Human creators sharing generative output (media_type tags video vs image per post). The grassroots AI-UGC challenger class.',
+  },
+  {
+    name: 'Human Storytelling (Reddit)',
+    config: {
+      subreddits: ['WritingPrompts', 'nosleep', 'shortstories'],
+      listing: 'new',
+      aiMediation: 'human_made',
+    },
+    notes:
+      'Grassroots human creative writing and fiction — the human-authored storytelling baseline against the AI-generated challenger UGC, distinct from institutional human sources (state media, museums).',
+  },
 ];
 
 async function main() {

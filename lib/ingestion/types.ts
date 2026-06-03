@@ -87,6 +87,13 @@ export interface RedditSourceConfig {
   originCountryCodes?: string[];
   /** Listing to pull; defaults to 'new' (chronological, best for incremental ingest). */
   listing?: 'new' | 'hot' | 'top';
+  /**
+   * Authorship-origin prior for every post from this bundle. Reddit is mostly human discourse,
+   * but dedicated AI-generation communities (r/aivideo, r/StableDiffusion…) are user-generated
+   * AI content — set 'ai_assisted' to class them as challengers at ingest; set 'human_made' for
+   * human-storytelling bundles (r/WritingPrompts…). Absent = unasserted (ambiguous → gate).
+   */
+  aiMediation?: AiMediation;
 }
 
 /**
@@ -153,6 +160,30 @@ export interface CivitaiSourceConfig {
   baseModels?: string[];
   /** ISO 3166-1 alpha-2 codes; usually unset — Civitai is a mixed-origin global commons. */
   originCountryCodes?: string[];
+}
+
+/**
+ * Vimeo (official REST API) — the curated/creator video platform, a counterpart to YouTube.
+ * Token-gated (VIMEO_ACCESS_TOKEN, "public" scope). A source defines exactly one slice: an
+ * open search (`query`), a channel, or a user feed. A known AI-creator channel can assert an
+ * ai_mediation prior; open search is left unasserted (the gate/scorer classify per video,
+ * since a search match does not prove AI origin).
+ */
+export interface VimeoSourceConfig {
+  /** Free-text search over public videos (GET /videos?query=…). One of query/channel/user. */
+  query?: string;
+  /** Pull a specific channel's videos instead of search (GET /channels/{channel}/videos). */
+  channel?: string;
+  /** Pull a specific user's uploads instead of search (GET /users/{user}/videos). */
+  user?: string;
+  /** Sort order: 'relevant' (default), 'date', 'plays', 'likes'. */
+  sort?: 'relevant' | 'date' | 'plays' | 'likes';
+  /** Max videos per run (1–100; defaults to 50). */
+  perPage?: number;
+  /** ISO 3166-1 alpha-2 codes applied to every artifact from this source. */
+  originCountryCodes?: string[];
+  /** Authorship-origin prior (e.g. 'ai_assisted' for a known AI-creator channel). */
+  aiMediation?: AiMediation;
 }
 
 /**

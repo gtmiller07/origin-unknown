@@ -21,6 +21,7 @@
     "seed:reddit": "node --env-file=.env.local --import tsx scripts/seed-reddit-sources.ts",
     "seed:mastodon": "node --env-file=.env.local --import tsx scripts/seed-mastodon-sources.ts",
     "seed:cultural": "node --env-file=.env.local --import tsx scripts/seed-cultural-sources.ts",
+    "seed:vimeo": "node --env-file=.env.local --import tsx scripts/seed-vimeo-sources.ts",
     "ingest": "node --env-file=.env.local --import tsx scripts/ingest.ts",
     "embed": "node --env-file=.env.local --import tsx scripts/embed.ts",
     "score": "node --env-file=.env.local --import tsx scripts/score.ts",
