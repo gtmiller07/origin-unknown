@@ -239,3 +239,56 @@ incumbent media, and where Western and non-Western AI diverge from each other. R
 
 *(Findings added 2026-06-03 from a corpus-constituency audit + the first stratified scoring runs;
 directional only, n≈30/cell. Nothing here alters the construct or any score.)*
+
+## Powered cross-cultural cut (v1.2) — supersedes the directional reads above
+
+The directional reads above were re-run on the active **v1.2** construct at larger n and, critically,
+re-sliced by **declared origin (`origin_country_codes`)** rather than detected language. The language
+cut was under-tagging the AI-film channels (short, English-ish titles detect as eng/null), collapsing
+the cross-cultural signal; the origin cut fixes it. Read-only analysis over already-scored artifacts
+(`scripts/analyze-cross-cultural.ts`).
+
+**Replication.** A media-matched v1.2 run (n=40/arm, challenger-video vs incumbent-video) reproduced
+the v1.1 direction on all six axes: incumbent leads origin / reach / cross-boundary / authenticity /
+reciprocity; challenger leads aesthetic_signal (0.36 vs 0.28 — narrowed from v1.1's 0.55 by the
+stricter "stylistic distinctiveness" re-anchor). The finding now holds across two prompt versions at
+~70/arm.
+
+**Broad unmatched sample** (the budget batch, 235 artifacts before the daily cost cap halted it). Over
+a random all-media sample, human_made leads *every* axis including aesthetic (0.363 vs 0.240 for
+ai_generated). This does not contradict the matched result — it sharpens it: AI's aesthetic edge is
+**video-matched-specific**, and an unmatched sample is dominated by the medium confound (the AI here
+is mostly stills). Methodological takeaway: report the media-matched comparison, not raw class means.
+
+**Cross-cultural cut by origin (powered, n≈60/arm).** Challenger (AI) video:
+
+| axis | Western (n=57) | non-Western (n=64) |
+|---|--:|--:|
+| origin | 0.484 | **0.582** |
+| reach | **0.337** | 0.205 |
+| aesthetic_signal | **0.360** | 0.289 |
+| diplomatic_cross_boundary | 0.248 | 0.210 |
+| diplomatic_authenticity | 0.213 | **0.414** |
+| diplomatic_reciprocity | 0.082 | 0.083 |
+
+Incumbent (human) video, same cut: authenticity 0.395 (W) vs 0.438 (non-W); origin 0.686 vs 0.774;
+the other axes cluster with small gaps.
+
+**Reads (now powered).** (i) Within AI video, non-Western origin scores **nearly double on
+authenticity (0.41 vs 0.21)** and higher on origin-legibility; Western AI keeps the edge on reach and
+polish. (ii) The authenticity-by-origin gap is **0.20 in AI video but only 0.04 in human-made
+incumbent video** — i.e. **AI mediation amplifies the authenticity advantage of non-Western origin**,
+the session's novel result. (iii) Cross-boundary and reciprocity stay near-flat and low for both AI
+arms. **Thesis (powered):** the dropping technical floor democratizes culturally-authentic
+*production* specifically for non-Western voices, but not yet diplomatic *reach* — authenticity
+travels; diplomatic circulation still favors incumbents and Western polish. Caveat: "Western /
+non-Western" is a coarse binarization of `origin_country_codes` (Anglo + Western Europe vs the rest);
+per-country data is retained for finer cuts.
+
+**Cost governance.** The anthropic daily cap ($30; monthly $500) is functional — it halted the batch
+at ~$22 / 235 artifacts, not a $0-reading artifact as previously assumed. Decision (2026-06-03): let
+scoring accrue at the safe daily rate (cron + occasional `npm run score:batch`) rather than raise the
+cap; the findings are already powered and further scoring is corpus-density, not necessity.
+
+*(Powered findings added 2026-06-03/04 on the v1.2 construct; n≈40–70/arm matched, n≈60/arm by
+origin. Supersedes the directional n≈30 reads above. Nothing here alters the construct or any score.)*
