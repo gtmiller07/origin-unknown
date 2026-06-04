@@ -1,0 +1,185 @@
+/* The tunnel — dark immersive 3D stage; light museum register for the 2D flat fallback. */
+
+.stage {
+  position: relative;
+  height: calc(100vh - 190px);
+  min-height: 480px;
+  background: #0f0f10;
+  overflow: hidden;
+}
+.detecting {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: #8a8a8a;
+}
+
+/* HUD */
+.hud {
+  position: absolute;
+  left: clamp(1rem, 4vw, 3rem);
+  bottom: clamp(1rem, 4vh, 2.5rem);
+  z-index: 3;
+  max-width: 36rem;
+}
+.hudYear {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  color: #f0e6d2;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.hudStation {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: #b85c3b;
+  margin: 0.15rem 0 0;
+}
+.hudHint {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  color: #8a8a8a;
+  margin: 0.5rem 0 0;
+  letter-spacing: 0.02em;
+}
+.hudHint a {
+  color: #b85c3b;
+}
+
+/* Density sparkline, top */
+.spark {
+  position: absolute;
+  top: clamp(0.75rem, 3vh, 1.75rem);
+  left: clamp(1rem, 4vw, 3rem);
+  right: clamp(1rem, 4vw, 3rem);
+  height: 34px;
+  z-index: 3;
+}
+.sparkBar {
+  fill: #555;
+}
+.sparkBarOn {
+  fill: #b85c3b;
+}
+
+/* ---------- 2D flat fallback ---------- */
+.flatPage {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: clamp(2rem, 5vw, 4rem) clamp(1.5rem, 5vw, 4rem) clamp(4rem, 10vh, 7rem);
+}
+.flatHead {
+  max-width: 640px;
+  margin-bottom: 2rem;
+}
+.flatTitle {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-style: italic;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: #171717;
+  margin: 0 0 0.75rem;
+}
+.flatSub {
+  font-family: var(--font-serif);
+  font-size: clamp(0.9rem, 1.3vw, 1rem);
+  line-height: 1.7;
+  color: #171717;
+  margin: 0;
+}
+.flatEra {
+  padding: 1.25rem 0;
+  border-top: 1px solid #e3e0d8;
+}
+.stationBanner {
+  background: #f0e6d2;
+  border-left: 3px solid #b85c3b;
+  padding: 0.85rem 1.1rem;
+  margin-bottom: 1rem;
+}
+.stationTitle {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  color: #171717;
+  margin: 0;
+}
+.stationMarker {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #b85c3b;
+  margin: 0.2rem 0 0;
+}
+.stationDesc {
+  font-family: var(--font-serif);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: #171717;
+  margin: 0.4rem 0 0;
+}
+.stationMeta {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: #737373;
+  margin: 0.4rem 0 0;
+}
+.flatYearHead {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+.flatYear {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  color: #171717;
+  font-variant-numeric: tabular-nums;
+}
+.flatCount {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: #737373;
+}
+.flatTiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.flatTile {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  color: #171717;
+  text-decoration: none;
+  background: #fafaf8;
+  border: 1px solid #d8d4ca;
+  border-left: 3px solid #a3a3a3;
+  padding: 0.3rem 0.5rem;
+  max-width: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.flatTile:hover {
+  border-color: #b85c3b;
+  color: #b85c3b;
+}
+.flatTile[data-region="w"] {
+  border-left-color: #b85c3b;
+}
+.flatTile[data-region="n"] {
+  border-left-color: #459e8f;
+}
+.back {
+  display: inline-block;
+  margin-top: 2.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: #737373;
+}
