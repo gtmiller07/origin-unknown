@@ -35,7 +35,7 @@ interface TunnelRow {
   reach: string | null;
 }
 
-export async function getTunnelArtifacts(limit = 600): Promise<TunnelArtifact[]> {
+export async function getTunnelArtifacts(limit = 2000): Promise<TunnelArtifact[]> {
   const rows = (await db.execute(sql`
     SELECT a.id, a.title, a.thumbnail_url AS "thumbnailUrl",
       (a.origin_country_codes)[1] AS "originCode", (a.language_codes)[1] AS "languageCode",
