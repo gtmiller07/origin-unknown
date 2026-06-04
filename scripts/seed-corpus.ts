@@ -11,6 +11,7 @@
 import { eq, sql } from 'drizzle-orm';
 import { useScriptDatabaseUrl } from './db-env';
 import { ALL_SEED } from './seed-data';
+import { THUMBNAILS } from './seed-data/thumbnails';
 import type { SeedArtifact } from './seed-data/types';
 
 const SOURCE_NAME = 'Seed Corpus (curated)';
@@ -96,7 +97,7 @@ async function main() {
         title: a.title,
         description: a.description,
         contentUrl: a.url,
-        thumbnailUrl: a.thumbnailUrl ?? deriveThumb(a.url, a.youtubeId),
+        thumbnailUrl: a.thumbnailUrl ?? THUMBNAILS[a.externalId] ?? deriveThumb(a.url, a.youtubeId),
         mediaType: a.mediaType,
         originCountryCodes: a.originCountryCodes,
         publishedAt: a.publishedAt,
@@ -114,7 +115,7 @@ async function main() {
           title: sql`excluded.title`,
           description: sql`excluded.description`,
           contentUrl: sql`excluded.content_url`,
-          thumbnailUrl: sql`excluded.thumbnail_url`,
+          thumbnailUrl: sql`COALESCE(excluded.thumbnail_url, artifacts.thumbnail_url)`,
           mediaType: sql`excluded.media_type`,
           originCountryCodes: sql`excluded.origin_country_codes`,
           publishedAt: sql`excluded.published_at`,

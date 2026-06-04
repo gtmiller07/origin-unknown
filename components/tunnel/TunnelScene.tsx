@@ -11,7 +11,7 @@ import type { Station, TunnelArtifact } from '@/lib/queries/tunnel';
  * CORS-safe; thumbnail textures are a documented Stage-B refinement.
  */
 import { Canvas, type ThreeEvent, useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 
 const LENGTH = 60;
@@ -81,6 +81,18 @@ function hash01(s: string): number {
     h = Math.imul(h, 16777619);
   }
   return (h >>> 0) / 4294967296;
+}
+
+/** Shared placement for a tile (used by both the colored InstancedMesh quads and the textured
+ *  overlay planes, so they align by construction). Z = time, angle = origin side + a stable jitter. */
+function tileTransform(a: TunnelArtifact): { x: number; y: number; z: number; scale: number } {
+  const yr = a.year ?? Y1;
+  const z = zOfYear(yr);
+  const r = rOfYear(yr) * 0.9;
+  const rnd = hash01(a.id);
+  const base = a.originCode ? (isWestern(a.originCode) ? Math.PI : 0) : rnd < 0.5 ? Math.PI : 0;
+  const ang = base + (rnd - 0.5) * Math.PI * 0.85;
+  return { x: r * Math.cos(ang), y: r * Math.sin(ang), z, scale: 0.5 + rOfYear(yr) * 0.16 };
 }
 
 function Corridor() {
@@ -186,16 +198,11 @@ function Tiles({
     const non = new THREE.Color(0.27, 0.62, 0.56);
     const other = new THREE.Color(0.5, 0.5, 0.5);
     artifacts.forEach((a, i) => {
-      const yr = a.year ?? Y1;
-      const z = zOfYear(yr);
-      const r = rOfYear(yr) * 0.9;
-      const rnd = hash01(a.id);
-      const base = a.originCode ? (isWestern(a.originCode) ? Math.PI : 0) : rnd < 0.5 ? Math.PI : 0;
-      const ang = base + (rnd - 0.5) * Math.PI * 0.85;
-      dummy.position.set(r * Math.cos(ang), r * Math.sin(ang), z);
+      const { x, y, z, scale } = tileTransform(a);
+      dummy.position.set(x, y, z);
       dummy.lookAt(0, 0, z);
       const hidden = hiddenIds?.has(a.id) ?? false;
-      const sc = hidden ? 0 : 0.5 + rOfYear(yr) * 0.16;
+      const sc = hidden ? 0 : scale;
       dummy.scale.set(sc, sc, sc);
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
@@ -227,6 +234,101 @@ function Tiles({
         }
       }}
     />
+  );
+}
+
+/**
+ * Lazily textures a tile with its artifact thumbnail via the same-origin /api/thumb proxy (so WebGL's
+ * CORS requirement is met), downscaled to 128px to bound GPU memory. Positioned just inside its
+ * colored quad and rendered only once the texture loads — so an absent or failed thumbnail simply
+ * leaves the quad visible.
+ */
+function TexturedTile({
+  a,
+  hidden,
+  onSelect,
+}: {
+  a: TunnelArtifact;
+  hidden: boolean;
+  onSelect: (id: string) => void;
+}) {
+  const ref = useRef<THREE.Mesh>(null);
+  const [tex, setTex] = useState<THREE.Texture | null>(null);
+  const t = useMemo(() => tileTransform(a), [a]);
+
+  useEffect(() => {
+    if (!a.thumbnailUrl) return;
+    let cancelled = false;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      if (cancelled) return;
+      const N = 128;
+      const cv = document.createElement('canvas');
+      cv.width = N;
+      cv.height = N;
+      const ctx = cv.getContext('2d');
+      if (!ctx) return;
+      ctx.drawImage(img, 0, 0, N, N);
+      const texture = new THREE.CanvasTexture(cv);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      setTex(texture);
+    };
+    img.src = `/api/thumb?url=${encodeURIComponent(a.thumbnailUrl)}`;
+    return () => {
+      cancelled = true;
+    };
+  }, [a.thumbnailUrl]);
+
+  useEffect(() => () => tex?.dispose(), [tex]);
+
+  useLayoutEffect(() => {
+    const m = ref.current;
+    if (!m) return;
+    // Nudge slightly inward (toward the corridor axis / camera) so it sits in front of the quad.
+    m.position.set(t.x * 0.98, t.y * 0.98, t.z);
+    m.scale.setScalar(t.scale);
+    m.lookAt(0, 0, t.z);
+  }, [t]);
+
+  if (!tex || hidden) return null;
+  return (
+    // biome-ignore lint/a11y/useKeyWithClickEvents: WebGL primitive; keyboard access is the /tunnel?mode=flat fallback
+    <mesh
+      ref={ref}
+      onClick={(e: ThreeEvent<MouseEvent>) => {
+        e.stopPropagation();
+        onSelect(a.id);
+      }}
+    >
+      <planeGeometry args={[1, 1]} />
+      <meshBasicMaterial map={tex} side={THREE.DoubleSide} toneMapped={false} />
+    </mesh>
+  );
+}
+
+function TexturedTiles({
+  artifacts,
+  onSelect,
+  hiddenIds,
+}: {
+  artifacts: TunnelArtifact[];
+  onSelect: (id: string) => void;
+  hiddenIds: Set<string> | null;
+}) {
+  return (
+    <>
+      {artifacts
+        .filter((a) => a.thumbnailUrl)
+        .map((a) => (
+          <TexturedTile
+            key={a.id}
+            a={a}
+            hidden={hiddenIds?.has(a.id) ?? false}
+            onSelect={onSelect}
+          />
+        ))}
+    </>
   );
 }
 
@@ -262,7 +364,7 @@ function CameraRig({ onYear }: { onYear: (y: number) => void }) {
 
   useFrame((_state, delta) => {
     if (auto.current) {
-      target.current = Math.min(2, target.current + delta * 7);
+      target.current = Math.min(2, target.current + delta * 1.75);
       if (target.current > -2) auto.current = false;
     }
     camera.position.z += (target.current - camera.position.z) * 0.08;
@@ -302,6 +404,7 @@ export default function TunnelScene({
       <Corridor />
       <StationRings stations={stations} />
       <Tiles artifacts={artifacts} onSelect={onSelect} hiddenIds={hiddenIds} />
+      <TexturedTiles artifacts={artifacts} onSelect={onSelect} hiddenIds={hiddenIds} />
       <CameraRig onYear={onYear} />
     </Canvas>
   );
