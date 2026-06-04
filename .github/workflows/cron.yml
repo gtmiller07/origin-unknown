@@ -8,7 +8,7 @@
 # Schedules (UTC; minutes are offset off :00 because GitHub delays top-of-hour jobs):
 #   - ingest      every 6h at :07  -> all 7 content ingest routes
 #   - embeddings  every 6h at :37  -> generate-embeddings (30m after ingest, so it has rows to embed)
-#   - maintenance daily   at 00:15 -> refresh-cost-window (resets the rolling cost-cap windows)
+#   - maintenance daily   at 00:15 -> refresh-cost-window + compute-stations (era density)
 #
 # Manual runs: Actions tab -> "Scheduled crons" -> Run workflow -> pick a target.
 #
@@ -90,8 +90,8 @@ jobs:
             ingest)      ROUTES=("${INGEST[@]}") ;;
             embeddings)  ROUTES=(generate-embeddings) ;;
             scoring)     ROUTES=("score-pending?limit=1") ;;
-            maintenance) ROUTES=(refresh-cost-window) ;;
-            all)         ROUTES=("${INGEST[@]}" generate-embeddings "score-pending?limit=1" refresh-cost-window) ;;
+            maintenance) ROUTES=(refresh-cost-window compute-stations) ;;
+            all)         ROUTES=("${INGEST[@]}" generate-embeddings "score-pending?limit=1" refresh-cost-window compute-stations) ;;
             *) echo "::error::Unknown target '$GROUP'"; exit 1 ;;
           esac
 

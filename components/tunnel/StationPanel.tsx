@@ -22,6 +22,9 @@ export function StationPanel({
   return (
     <div className={styles.stationPanel}>
       <p className={styles.spStation}>{station.title}</p>
+      {station.artifactDensity != null ? (
+        <p className={styles.spDensity}>{station.artifactDensity} artifacts in this era</p>
+      ) : null}
       <p className={styles.spHint}>Manipulate the era — toggle a counterfactual.</p>
       {station.interactiveVariables.map((v) => {
         const val = values[v.id] ?? v.default;

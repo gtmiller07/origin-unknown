@@ -23,6 +23,7 @@
     "seed:cultural": "node --env-file=.env.local --import tsx scripts/seed-cultural-sources.ts",
     "seed:curator": "node --env-file=.env.local --import tsx scripts/seed-curator.ts",
     "seed:corpus": "node --env-file=.env.local --import tsx scripts/seed-corpus.ts",
+    "stations:compute": "node --env-file=.env.local --import tsx scripts/compute-stations.ts",
     "seed:vimeo": "node --env-file=.env.local --import tsx scripts/seed-vimeo-sources.ts",
     "ingest": "node --env-file=.env.local --import tsx scripts/ingest.ts",
     "embed": "node --env-file=.env.local --import tsx scripts/embed.ts",

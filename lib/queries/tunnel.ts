@@ -88,6 +88,7 @@ export interface Station {
   description: string | null;
   technicalMarker: string | null;
   startYear: number | null;
+  artifactDensity: number | null;
   interactiveVariables: StationVariable[];
   comparativeGrids: ComparativeGridSpec[];
 }
@@ -105,6 +106,7 @@ export async function getStations(): Promise<Station[]> {
     description: r.description,
     technicalMarker: r.technicalMarker,
     startYear: r.startDate ? new Date(r.startDate).getUTCFullYear() : null,
+    artifactDensity: r.artifactDensity ?? null,
     interactiveVariables: (Array.isArray(r.interactiveVariables)
       ? r.interactiveVariables
       : []) as StationVariable[],
