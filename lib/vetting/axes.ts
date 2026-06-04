@@ -23,11 +23,11 @@ export interface AxisGuide {
 export const AXIS_GUIDES: AxisGuide[] = [
   {
     key: 'origin',
-    label: 'Origin ambiguity',
-    question: 'How traceable is where this came from?',
-    plain: 'How hard it is to tell where — and from whom — this artifact originated.',
-    low: 'clear, attributable origin',
-    high: 'origin ambiguous or unknowable',
+    label: 'Origin clarity',
+    question: 'How clearly can you tell where this came from?',
+    plain: 'How clearly attributable the origin is — who made it and where. (Low = ambiguous or deliberately obscured; high = clear, single, traceable origin.)',
+    low: 'origin ambiguous or obscured',
+    high: 'clear, attributable origin',
   },
   {
     key: 'reach',
