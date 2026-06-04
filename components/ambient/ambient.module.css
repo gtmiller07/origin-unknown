@@ -184,3 +184,159 @@
   font-size: 0.72rem;
   color: #737373;
 }
+
+/* ---------- Legend (decodes the field's visual grammar) ---------- */
+.legend {
+  position: absolute;
+  top: clamp(1rem, 3vh, 2rem);
+  right: clamp(1rem, 4vw, 3rem);
+  z-index: 5;
+  background: rgba(20, 20, 20, 0.72);
+  border: 1px solid #3a3a3a;
+  padding: 0.85rem 1rem;
+  max-width: 16rem;
+}
+.legendHead {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f0e6d2;
+  margin: 0 0 0.6rem;
+}
+.legendList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.18rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  color: #c9c9c9;
+}
+.legendKey {
+  color: #b85c3b;
+  width: 4.2rem;
+  flex-shrink: 0;
+}
+.legendVal {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.legendRamp {
+  display: inline-block;
+  width: 2.2rem;
+  height: 0.5rem;
+  background: linear-gradient(90deg, #4a6b7a, #b85c3b, #f0e6d2);
+}
+.legendHint {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.02em;
+  color: #8a8a8a;
+  margin: 0.6rem 0 0;
+}
+@media (max-width: 640px) {
+  .legend {
+    display: none;
+  }
+}
+
+/* ---------- Hover scorecard ---------- */
+.card {
+  position: fixed;
+  z-index: 6;
+  width: 264px;
+  background: rgba(20, 20, 20, 0.94);
+  border: 1px solid #3a3a3a;
+  padding: 0.7rem;
+  pointer-events: none;
+}
+.cardThumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #0d0d0d;
+  border: 1px solid #2a2a2a;
+  overflow: hidden;
+}
+.cardThumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.cardThumbEmpty {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6a6a6a;
+}
+.cardTitle {
+  font-family: var(--font-serif);
+  font-size: 0.9rem;
+  line-height: 1.3;
+  color: #f4ede0;
+  margin: 0.55rem 0 0.2rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cardMeta {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: #9a9a9a;
+  margin: 0 0 0.5rem;
+}
+.cardBars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+}
+.cardBarRow {
+  display: grid;
+  grid-template-columns: 4.8rem 1fr 1.8rem;
+  align-items: center;
+  gap: 0.4rem;
+}
+.cardBarLabel {
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  color: #9a9a9a;
+}
+.cardBarTrack {
+  position: relative;
+  height: 3px;
+  background: #333;
+}
+.cardBarFill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: #b85c3b;
+}
+.cardBarVal {
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  color: #d4d4d4;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.cardHint {
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #b85c3b;
+  margin: 0.55rem 0 0;
+}

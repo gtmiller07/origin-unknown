@@ -2,16 +2,18 @@
 
 import type { Particle } from '@/lib/queries/ambient';
 /**
- * AmbientField — the R3F particle field (Phase 6). Each scored artifact is one point: position
- * clusters by origin region, colour temperature runs cool→warm by aesthetic_signal, point size by
- * reach, and glow (alpha + brightness, additive) by the diplomatic-effect composite. A slow drift
- * gives the field life; reduced-motion freezes it. A custom point shader carries per-point size and
- * glow, which PointsMaterial cannot. drei is intentionally unused (raw R3F keeps the React-19 path
- * dependency-light).
+ * AmbientField — the interactive R3F particle field (Phase 6). Each scored artifact is one point:
+ * position clusters by origin region, colour temperature runs cool→warm by aesthetic_signal, point
+ * size by reach, glow (additive) by the diplomatic-effect composite. OrbitControls (from three's
+ * examples, so drei stays out of the React-19 path) give drag-rotate + scroll-zoom; the field
+ * auto-drifts at rest until the viewer grabs it. Hovering a point reports its index + screen
+ * position (for the scorecard); clicking opens the evidence panel. A custom point shader carries
+ * per-point size + glow, which PointsMaterial cannot.
  */
-import { Canvas, useFrame } from '@react-three/fiber';
-import { useEffect, useMemo, useRef } from 'react';
+import { Canvas, type ThreeEvent, useFrame, useThree } from '@react-three/fiber';
+import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 const REGION_CENTERS: Record<string, number[]> = {
   na: [-4.5, 1.5, 0.5],
@@ -103,6 +105,14 @@ function aestheticColor(v: number): number[] {
   ];
   return t < 0.5 ? lerp(cool, mid, t * 2) : lerp(mid, warm, (t - 0.5) * 2);
 }
+function diplomaticGlow(p: Particle): number {
+  const v = [
+    p.axes.diplomatic_cross_boundary,
+    p.axes.diplomatic_authenticity,
+    p.axes.diplomatic_reciprocity,
+  ].filter((x): x is number => x != null);
+  return v.length ? v.reduce((a, b) => a + b, 0) / v.length : 0.05;
+}
 
 const vertexShader = `
 attribute vec3 color;
@@ -129,9 +139,48 @@ void main() {
   gl_FragColor = vec4(vColor * (0.85 + 0.45 * vGlow), alpha);
 }`;
 
-function Field({ particles, reducedMotion }: { particles: Particle[]; reducedMotion: boolean }) {
-  const ref = useRef<THREE.Points>(null);
+function Controls({ reducedMotion }: { reducedMotion: boolean }) {
+  const camera = useThree((s) => s.camera);
+  const gl = useThree((s) => s.gl);
+  const controls = useMemo(() => new OrbitControls(camera, gl.domElement), [camera, gl]);
+  useEffect(() => {
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.enablePan = false;
+    controls.minDistance = 4;
+    controls.maxDistance = 22;
+    controls.autoRotate = !reducedMotion;
+    controls.autoRotateSpeed = 0.45;
+    const stop = () => {
+      controls.autoRotate = false;
+    };
+    controls.addEventListener('start', stop);
+    return () => {
+      controls.removeEventListener('start', stop);
+      controls.dispose();
+    };
+  }, [controls, reducedMotion]);
+  useFrame(() => controls.update());
+  return null;
+}
 
+function RaycastTune() {
+  const raycaster = useThree((s) => s.raycaster);
+  useEffect(() => {
+    raycaster.params.Points = { threshold: 0.4 };
+  }, [raycaster]);
+  return null;
+}
+
+function Field({
+  particles,
+  onHover,
+  onSelect,
+}: {
+  particles: Particle[];
+  onHover: (index: number | null, x: number, y: number) => void;
+  onSelect: (id: string) => void;
+}) {
   const geometry = useMemo(() => {
     const n = particles.length;
     const positions = new Float32Array(n * 3);
@@ -140,17 +189,17 @@ function Field({ particles, reducedMotion }: { particles: Particle[]; reducedMot
     const glows = new Float32Array(n);
     particles.forEach((p, i) => {
       const rng = mulberry32(hash(p.id));
-      const center = REGION_CENTERS[regionOf(p.origin)] ?? [0, 0.5, 0];
+      const center = REGION_CENTERS[regionOf(p.originCode)] ?? [0, 0.5, 0];
       const spread = 1.7;
       positions[i * 3] = center[0] + (rng() - 0.5) * spread * 2;
       positions[i * 3 + 1] = center[1] + (rng() - 0.5) * spread * 2;
       positions[i * 3 + 2] = center[2] + (rng() - 0.5) * spread * 2;
-      const col = aestheticColor(p.aesthetic ?? 0.3);
+      const col = aestheticColor(p.axes.aesthetic_signal ?? 0.3);
       colors[i * 3] = col[0];
       colors[i * 3 + 1] = col[1];
       colors[i * 3 + 2] = col[2];
-      sizes[i] = 5 + (p.reach ?? 0.1) * 24;
-      glows[i] = p.diplomatic ?? 0.05;
+      sizes[i] = 5 + (p.axes.reach ?? 0.1) * 24;
+      glows[i] = diplomaticGlow(p);
     });
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -175,21 +224,37 @@ function Field({ particles, reducedMotion }: { particles: Particle[]; reducedMot
   useEffect(() => () => geometry.dispose(), [geometry]);
   useEffect(() => () => material.dispose(), [material]);
 
-  useFrame((_state, delta) => {
-    if (ref.current && !reducedMotion) {
-      ref.current.rotation.y += delta * 0.045;
-    }
-  });
-
-  return <points ref={ref} geometry={geometry} material={material} />;
+  return (
+    // biome-ignore lint/a11y/useKeyWithClickEvents: <points> is a WebGL primitive, not a DOM node — keyboard access is provided by the /live?view=list fallback
+    <points
+      geometry={geometry}
+      material={material}
+      onPointerMove={(e: ThreeEvent<PointerEvent>) => {
+        e.stopPropagation();
+        if (e.index != null) onHover(e.index, e.nativeEvent.clientX, e.nativeEvent.clientY);
+      }}
+      onPointerOut={() => onHover(null, 0, 0)}
+      onClick={(e: ThreeEvent<MouseEvent>) => {
+        e.stopPropagation();
+        if (e.index != null) {
+          const p = particles[e.index];
+          if (p) onSelect(p.id);
+        }
+      }}
+    />
+  );
 }
 
 export default function AmbientField({
   particles,
   reducedMotion = false,
+  onHover,
+  onSelect,
 }: {
   particles: Particle[];
   reducedMotion?: boolean;
+  onHover: (index: number | null, x: number, y: number) => void;
+  onSelect: (id: string) => void;
 }) {
   return (
     <Canvas
@@ -197,8 +262,11 @@ export default function AmbientField({
       dpr={[1, 2]}
       style={{ position: 'absolute', inset: 0 }}
       gl={{ antialias: true, alpha: true }}
+      onPointerMissed={() => onHover(null, 0, 0)}
     >
-      <Field particles={particles} reducedMotion={reducedMotion} />
+      <Controls reducedMotion={reducedMotion} />
+      <RaycastTune />
+      <Field particles={particles} onHover={onHover} onSelect={onSelect} />
     </Canvas>
   );
 }
