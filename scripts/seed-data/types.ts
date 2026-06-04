@@ -34,6 +34,10 @@ export interface SeedArtifact {
   /** Stable canonical URL (YouTube ID, Wikipedia, official/museum page). Becomes content_url. */
   url: string;
   thumbnailUrl?: string | null;
+  /** If set (and thumbnailUrl is not), the loader derives a stable YouTube thumbnail from this id.
+   *  The loader also auto-extracts an id from a YouTube `url`, so this is only needed when `url`
+   *  points elsewhere (e.g. Wikipedia) but a canonical YouTube video exists. */
+  youtubeId?: string;
   mediaType: MediaType;
   /** ISO date (YYYY-MM-DD). Drives tunnel Z-placement; use the real publication/launch date. */
   publishedAt: string;

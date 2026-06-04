@@ -24,6 +24,16 @@ const AXES = [
 ] as const;
 const MEDIA = new Set(['image', 'video', 'audio', 'text', 'mixed']);
 
+/** A stable YouTube thumbnail (served for <img> without CORS issues), from an explicit id or a
+ *  YouTube url. Returns null when neither yields an id. */
+function deriveThumb(url: string, youtubeId?: string): string | null {
+  const id =
+    youtubeId ??
+    url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})/)?.[1] ??
+    null;
+  return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : null;
+}
+
 function validate(items: SeedArtifact[]): void {
   const ids = new Set<string>();
   for (const a of items) {
@@ -86,7 +96,7 @@ async function main() {
         title: a.title,
         description: a.description,
         contentUrl: a.url,
-        thumbnailUrl: a.thumbnailUrl ?? null,
+        thumbnailUrl: a.thumbnailUrl ?? deriveThumb(a.url, a.youtubeId),
         mediaType: a.mediaType,
         originCountryCodes: a.originCountryCodes,
         publishedAt: a.publishedAt,

@@ -108,6 +108,7 @@ export const ERA_2012_2018: SeedArtifact[] = [
   },
   {
     externalId: 'e3-despacito',
+    youtubeId: 'kJQP7kiw5Fk',
     title: 'Luis Fonsi, “Despacito” (2017)',
     description: 'The first video to reach 5 billion views and a Spanish-language song atop the global charts — Latin music’s definitive platform-era crossover.',
     url: 'https://en.wikipedia.org/wiki/Despacito',
@@ -188,6 +189,7 @@ export const ERA_2012_2018: SeedArtifact[] = [
   },
   {
     externalId: 'e3-what-does-the-fox-say',
+    youtubeId: 'jofNR_WkoCE',
     title: 'Ylvis, “The Fox (What Does the Fox Say?)” (2013)',
     description: 'A Norwegian comedy-pop song engineered as an absurd viral hit — small-nation novelty achieving global reach.',
     url: 'https://en.wikipedia.org/wiki/The_Fox_(What_Does_the_Fox_Say%3F)',
@@ -288,6 +290,7 @@ export const ERA_2012_2018: SeedArtifact[] = [
   },
   {
     externalId: 'e3-ppap',
+    youtubeId: '0E00Zuayv9Q',
     title: 'PIKOTARO, “PPAP (Pen-Pineapple-Apple-Pen)” (2016)',
     description: 'A Japanese comedy single that became a global viral hit and a Guinness-record shortest charting song.',
     url: 'https://en.wikipedia.org/wiki/PPAP_(Pen-Pineapple-Apple-Pen)',
@@ -308,6 +311,7 @@ export const ERA_2012_2018: SeedArtifact[] = [
   },
   {
     externalId: 'e3-baby-shark',
+    youtubeId: 'XqZsoesa55w',
     title: 'Pinkfong, “Baby Shark” (2016)',
     description: 'A Korean children’s song that became the most-viewed video on YouTube — a non-Western property reaching the absolute top of global reach.',
     url: 'https://en.wikipedia.org/wiki/Baby_Shark',

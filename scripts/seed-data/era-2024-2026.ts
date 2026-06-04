@@ -448,6 +448,7 @@ export const ERA_2024_2026: SeedArtifact[] = [
   },
   {
     externalId: 'e5-apt',
+    youtubeId: 'ekr2nIex040',
     title: 'ROSÉ & Bruno Mars, “APT.” (2024)',
     description: 'A K-pop-meets-US pop smash built on a Korean drinking game — a high-reciprocity East-West collaboration.',
     url: 'https://en.wikipedia.org/wiki/Apt._(song)',
@@ -508,6 +509,7 @@ export const ERA_2024_2026: SeedArtifact[] = [
   },
   {
     externalId: 'e5-tyla-water',
+    youtubeId: 'XoiOOiuH8iI',
     title: 'Tyla, “Water” (2024 breakout)',
     description: 'A South African amapiano-pop hit and the first Best African Music Performance Grammy — Amapiano crossing fully into global pop.',
     url: 'https://en.wikipedia.org/wiki/Water_(Tyla_song)',

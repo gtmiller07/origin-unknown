@@ -8,6 +8,7 @@ const ERA = '2018–2024';
 export const ERA_2018_2024: SeedArtifact[] = [
   {
     externalId: 'e4-old-town-road',
+    youtubeId: 'w2Ov5jzm3j8',
     title: 'Lil Nas X, “Old Town Road” (2019)',
     description: 'A country-trap song seeded on TikTok that became the longest-running US number one — the platform’s power to mint a genre-blurring hit.',
     url: 'https://en.wikipedia.org/wiki/Old_Town_Road',
@@ -88,6 +89,7 @@ export const ERA_2018_2024: SeedArtifact[] = [
   },
   {
     externalId: 'e4-wellerman',
+    youtubeId: 'qP-7GNoDJ5c',
     title: 'Nathan Evans, “Wellerman” / ShantyTok (2021)',
     description: 'A Scottish postman’s sea-shanty cover that sparked a global collaborative-duet phenomenon — TikTok’s “stitch” as collective music-making.',
     url: 'https://en.wikipedia.org/wiki/Wellerman',

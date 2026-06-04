@@ -47,6 +47,7 @@ export const ERA_2005_2012: SeedArtifact[] = [
   },
   {
     externalId: 'e2-rickroll',
+    youtubeId: 'dQw4w9WgXcQ',
     title: 'Rickroll — “Never Gonna Give You Up” (2007)',
     description: 'A bait-and-switch link prank built on Rick Astley’s 1987 song — perhaps the most enduring participatory meme of the web.',
     url: 'https://en.wikipedia.org/wiki/Rickrolling',
@@ -287,6 +288,7 @@ export const ERA_2005_2012: SeedArtifact[] = [
   },
   {
     externalId: 'e2-nyan-cat',
+    youtubeId: 'QH2-TGUlwu4',
     title: 'Nyan Cat (2011)',
     description: 'A looping pixel-cat animation set to a Japanese Vocaloid song — a layered-origin meme blending US art and Japanese audio.',
     url: 'https://en.wikipedia.org/wiki/Nyan_Cat',
