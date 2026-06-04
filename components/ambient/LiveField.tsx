@@ -3,12 +3,13 @@
 import type { LiveStatus, Particle } from '@/lib/queries/ambient';
 /**
  * LiveField — client wrapper for the ambient field. Dynamically imports the R3F canvas (ssr:false),
- * detects WebGL + reduced-motion, holds the hover state, and overlays the legend, the hover
- * scorecard, the dissertation question, and the live HUD. Clicking a particle opens its evidence
- * panel. Degrades to a list link where WebGL is unavailable.
+ * detects WebGL + reduced-motion, holds the hover state and the layout choice, and overlays the
+ * legend (with its layout toggle), the hover scorecard, the dissertation question, and the live HUD.
+ * Clicking a particle opens its evidence panel; no WebGL → a list link.
  */
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
+import type { FieldLayout } from './AmbientField';
 import { DissertationQuestion } from './DissertationQuestion';
 import { HoverCard } from './HoverCard';
 import { Legend } from './Legend';
@@ -35,6 +36,7 @@ export function LiveField({ particles, status }: { particles: Particle[]; status
   const [ok, setOk] = useState<boolean | null>(null);
   const [reduced, setReduced] = useState(false);
   const [hover, setHover] = useState<HoverState | null>(null);
+  const [layout, setLayout] = useState<FieldLayout>('origin');
 
   useEffect(() => {
     setOk(detectWebgl());
@@ -65,11 +67,12 @@ export function LiveField({ particles, status }: { particles: Particle[]; status
         <>
           <AmbientField
             particles={particles}
+            layout={layout}
             reducedMotion={reduced}
             onHover={onHover}
             onSelect={onSelect}
           />
-          <Legend />
+          <Legend layout={layout} onLayoutChange={setLayout} />
           <DissertationQuestion />
           {hover ? <HoverCard particle={hover.particle} x={hover.x} y={hover.y} /> : null}
         </>

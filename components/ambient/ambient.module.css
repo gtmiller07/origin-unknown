@@ -241,6 +241,55 @@
   color: #8a8a8a;
   margin: 0.6rem 0 0;
 }
+.legendToggle {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.7rem;
+}
+.legendToggleBtn {
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #9a9a9a;
+  background: transparent;
+  border: 1px solid #3a3a3a;
+  padding: 0.28rem 0.5rem;
+  cursor: pointer;
+}
+.legendToggleBtn:hover {
+  color: #f0e6d2;
+  border-color: #5a5a5a;
+}
+.legendToggleActive {
+  color: #141414;
+  background: #b85c3b;
+  border-color: #b85c3b;
+}
+.legendToggleActive:hover {
+  color: #141414;
+}
+.legendCaption {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.66rem;
+  line-height: 1.5;
+  color: #b3b3b3;
+  margin: 0.7rem 0 0;
+}
+.swW,
+.swN {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  vertical-align: middle;
+}
+.swW {
+  background: #b85c3b;
+}
+.swN {
+  background: #459e8f;
+}
 @media (max-width: 640px) {
   .legend {
     display: none;
