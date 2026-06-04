@@ -15,8 +15,10 @@ export interface TunnelArtifact {
   thumbnailUrl: string | null;
   originCode: string | null;
   aiMediation: string | null;
+  authorshipClass: string | null;
   year: number | null;
   aesthetic: number | null;
+  reach: number | null;
 }
 
 interface TunnelRow {
@@ -25,16 +27,20 @@ interface TunnelRow {
   thumbnailUrl: string | null;
   originCode: string | null;
   aiMediation: string | null;
+  authorship: string | null;
   year: number | null;
   aesthetic: string | null;
+  reach: string | null;
 }
 
 export async function getTunnelArtifacts(limit = 600): Promise<TunnelArtifact[]> {
   const rows = (await db.execute(sql`
     SELECT a.id, a.title, a.thumbnail_url AS "thumbnailUrl",
       (a.origin_country_codes)[1] AS "originCode", a.ai_mediation AS "aiMediation",
+      a.authorship_class AS authorship,
       extract(year FROM a.published_at)::int AS year,
-      max(s.ai_proposed_value) FILTER (WHERE s.axis = 'aesthetic_signal') AS aesthetic
+      max(s.ai_proposed_value) FILTER (WHERE s.axis = 'aesthetic_signal') AS aesthetic,
+      max(s.ai_proposed_value) FILTER (WHERE s.axis = 'reach') AS reach
     FROM artifacts a
     JOIN scores s ON s.artifact_id = a.id
     WHERE a.status = 'scored' AND a.published_at IS NOT NULL
@@ -48,8 +54,10 @@ export async function getTunnelArtifacts(limit = 600): Promise<TunnelArtifact[]>
     thumbnailUrl: r.thumbnailUrl,
     originCode: r.originCode,
     aiMediation: r.aiMediation,
+    authorshipClass: r.authorship,
     year: r.year,
     aesthetic: r.aesthetic == null ? null : Number(r.aesthetic),
+    reach: r.reach == null ? null : Number(r.reach),
   }));
 }
 

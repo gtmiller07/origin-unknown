@@ -1,14 +1,17 @@
 'use client';
 
 import type { Station, TunnelArtifact } from '@/lib/queries/tunnel';
+import { evaluatePredicate } from '@/lib/utils/variable-filter';
 /**
- * TunnelView — client wrapper for the 3D corridor. Detects WebGL + mobile and redirects those to
- * the `?mode=flat` 2D timeline; otherwise dynamically mounts the R3F scene (ssr:false). Overlays a
- * density sparkline (the content explosion, by year), a live year readout with the nearest era
- * station, and the controls hint. Clicking an artifact opens its evidence panel.
+ * TunnelView — client wrapper for the 3D corridor. Detects WebGL + mobile and redirects those to the
+ * `?mode=flat` 2D timeline; otherwise dynamically mounts the R3F scene (ssr:false). Overlays a
+ * density sparkline, a live year/station readout, and — when the camera is near an era station with
+ * interactive variables — the StationPanel, whose toggles/sliders filter the visible wall artifacts
+ * (the Ciechanowski move) via their filter predicates.
  */
 import dynamic from 'next/dynamic';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { StationPanel } from './StationPanel';
 import styles from './tunnel.module.css';
 
 const TunnelScene = dynamic(() => import('./TunnelScene'), { ssr: false });
@@ -87,6 +90,7 @@ export function TunnelView({
 }) {
   const [ready, setReady] = useState(false);
   const [year, setYear] = useState(1998);
+  const [varOverrides, setVarOverrides] = useState<Record<string, number | boolean>>({});
 
   useEffect(() => {
     const mobile = window.matchMedia('(max-width: 820px)').matches;
@@ -97,7 +101,44 @@ export function TunnelView({
     setReady(true);
   }, []);
 
-  const near = nearestStation(stations, year);
+  const activeStation = nearestStation(stations, year);
+  const stationId = activeStation?.id;
+
+  // A different station's variables shouldn't carry over.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset only when the station changes
+  useEffect(() => {
+    setVarOverrides({});
+  }, [stationId]);
+
+  const hiddenIds = useMemo(() => {
+    if (!activeStation) return null;
+    const active = activeStation.interactiveVariables.filter(
+      (v) => (varOverrides[v.id] ?? v.default) !== v.default
+    );
+    if (!active.length) return null;
+    const hidden = new Set<string>();
+    for (const a of artifacts) {
+      const base = {
+        year: a.year,
+        reach: a.reach,
+        ai_mediation: a.aiMediation,
+        authorship: a.authorshipClass,
+        has_c2pa: false,
+      };
+      for (const v of active) {
+        const value = varOverrides[v.id] ?? v.default;
+        const ok = evaluatePredicate(v.filter_predicate, {
+          ...base,
+          value: typeof value === 'number' ? value : undefined,
+        });
+        if (!ok) {
+          hidden.add(a.id);
+          break;
+        }
+      }
+    }
+    return hidden;
+  }, [activeStation, varOverrides, artifacts]);
 
   return (
     <div className={styles.stage}>
@@ -109,17 +150,27 @@ export function TunnelView({
             window.location.href = `/artifact/${id}`;
           }}
           onYear={setYear}
+          hiddenIds={hiddenIds}
         />
       ) : (
         <div className={styles.detecting}>Loading the tunnel…</div>
       )}
+
+      {ready && activeStation ? (
+        <StationPanel
+          station={activeStation}
+          values={varOverrides}
+          onChange={(id, v) => setVarOverrides((o) => ({ ...o, [id]: v }))}
+        />
+      ) : null}
+
       <Sparkline density={density} year={year} />
       <div className={styles.hud}>
         <p className={styles.hudYear}>{year}</p>
-        {near ? (
+        {activeStation ? (
           <p className={styles.hudStation}>
-            {near.title}
-            {near.technicalMarker ? ` — ${near.technicalMarker}` : ''}
+            {activeStation.title}
+            {activeStation.technicalMarker ? ` — ${activeStation.technicalMarker}` : ''}
           </p>
         ) : null}
         <p className={styles.hudHint}>

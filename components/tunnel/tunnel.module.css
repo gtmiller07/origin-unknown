@@ -66,6 +66,71 @@
   fill: #b85c3b;
 }
 
+/* Station panel — Ciechanowski-style interactive variables, slides in at an era */
+.stationPanel {
+  position: absolute;
+  left: clamp(1rem, 4vw, 3rem);
+  top: clamp(4rem, 14vh, 8rem);
+  z-index: 4;
+  width: 16rem;
+  max-width: 80vw;
+  background: rgba(20, 20, 20, 0.82);
+  border: 1px solid #3a3a3a;
+  border-left: 3px solid #b85c3b;
+  padding: 0.9rem 1rem;
+}
+.spStation {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #f0e6d2;
+  margin: 0;
+}
+.spHint {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.72rem;
+  color: #9a9a9a;
+  margin: 0.2rem 0 0.75rem;
+}
+.spVar {
+  padding: 0.5rem 0;
+  border-top: 1px solid #2a2a2a;
+}
+.spToggleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+.spToggleRow input,
+.spSliderRow input[type="range"] {
+  accent-color: #b85c3b;
+}
+.spSliderRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.spLabel {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: #e0e0e0;
+}
+.spDesc {
+  font-family: var(--font-serif);
+  font-size: 0.74rem;
+  line-height: 1.5;
+  color: #8a8a8a;
+  margin: 0.3rem 0 0;
+}
+@media (max-width: 820px) {
+  .stationPanel {
+    display: none;
+  }
+}
+
 /* ---------- 2D flat fallback ---------- */
 .flatPage {
   max-width: 1000px;

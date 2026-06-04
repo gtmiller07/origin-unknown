@@ -165,9 +165,11 @@ function StationRings({ stations }: { stations: Station[] }) {
 function Tiles({
   artifacts,
   onSelect,
+  hiddenIds,
 }: {
   artifacts: TunnelArtifact[];
   onSelect: (id: string) => void;
+  hiddenIds: Set<string> | null;
 }) {
   const ref = useRef<THREE.InstancedMesh>(null);
   const geometry = useMemo(() => new THREE.PlaneGeometry(1, 1), []);
@@ -192,7 +194,8 @@ function Tiles({
       const ang = base + (rnd - 0.5) * Math.PI * 0.85;
       dummy.position.set(r * Math.cos(ang), r * Math.sin(ang), z);
       dummy.lookAt(0, 0, z);
-      const sc = 0.5 + rOfYear(yr) * 0.16;
+      const hidden = hiddenIds?.has(a.id) ?? false;
+      const sc = hidden ? 0 : 0.5 + rOfYear(yr) * 0.16;
       dummy.scale.set(sc, sc, sc);
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
@@ -200,7 +203,8 @@ function Tiles({
     });
     mesh.instanceMatrix.needsUpdate = true;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-  }, [artifacts]);
+    // hiddenIds is a fresh Set when the station filter changes, so the matrices recompute
+  }, [artifacts, hiddenIds]);
 
   useEffect(
     () => () => {
@@ -280,11 +284,13 @@ export default function TunnelScene({
   stations,
   onSelect,
   onYear,
+  hiddenIds,
 }: {
   artifacts: TunnelArtifact[];
   stations: Station[];
   onSelect: (id: string) => void;
   onYear: (y: number) => void;
+  hiddenIds: Set<string> | null;
 }) {
   return (
     <Canvas
@@ -295,7 +301,7 @@ export default function TunnelScene({
     >
       <Corridor />
       <StationRings stations={stations} />
-      <Tiles artifacts={artifacts} onSelect={onSelect} />
+      <Tiles artifacts={artifacts} onSelect={onSelect} hiddenIds={hiddenIds} />
       <CameraRig onYear={onYear} />
     </Canvas>
   );
