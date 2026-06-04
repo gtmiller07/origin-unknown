@@ -78,6 +78,39 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             Queue
           </a>
           <a
+            href="/admin/removed"
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.75rem',
+              color: '#737373',
+              textDecoration: 'none',
+            }}
+          >
+            Removed
+          </a>
+          <a
+            href="/admin/takedowns"
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.75rem',
+              color: '#737373',
+              textDecoration: 'none',
+            }}
+          >
+            Takedowns
+          </a>
+          <a
+            href="/admin/appeals"
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.75rem',
+              color: '#737373',
+              textDecoration: 'none',
+            }}
+          >
+            Appeals
+          </a>
+          <a
             href="/admin/artifacts"
             style={{
               fontFamily: 'var(--font-mono)',

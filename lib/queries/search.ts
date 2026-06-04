@@ -7,7 +7,7 @@ import { artifacts, sources } from '@/lib/db/schema';
  * AI-mediation, authorship class, origin region (Western / non-Western), and language code. With no
  * query it returns the most-recent scored artifacts.
  */
-import { type SQL, and, desc, eq, sql } from 'drizzle-orm';
+import { type SQL, and, desc, eq, isNull, sql } from 'drizzle-orm';
 
 const WESTERN = [
   'US',
@@ -54,7 +54,7 @@ export interface SearchResult {
 }
 
 export async function searchArtifacts(p: SearchParams, limit = 60): Promise<SearchResult[]> {
-  const conds: SQL[] = [eq(artifacts.status, 'scored')];
+  const conds: SQL[] = [eq(artifacts.status, 'scored'), isNull(artifacts.removedAt)];
   const q = p.q?.trim();
   if (q) conds.push(sql`${artifacts.searchVector} @@ websearch_to_tsquery('english', ${q})`);
   if (p.media) conds.push(eq(artifacts.mediaType, p.media));

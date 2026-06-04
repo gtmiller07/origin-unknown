@@ -43,7 +43,7 @@ export async function getTunnelArtifacts(limit = 600): Promise<TunnelArtifact[]>
       max(s.ai_proposed_value) FILTER (WHERE s.axis = 'reach') AS reach
     FROM artifacts a
     JOIN scores s ON s.artifact_id = a.id
-    WHERE a.status = 'scored' AND a.published_at IS NOT NULL
+    WHERE a.status = 'scored' AND a.published_at IS NOT NULL AND a.removed_at IS NULL
     GROUP BY a.id
     ORDER BY a.published_at
     LIMIT ${limit}
@@ -119,7 +119,7 @@ export async function getYearDensity(): Promise<Array<{ year: number; count: num
   const rows = (await db.execute(sql`
     SELECT extract(year FROM published_at)::int AS year, count(*)::int AS count
     FROM artifacts
-    WHERE status = 'scored' AND published_at IS NOT NULL
+    WHERE status = 'scored' AND published_at IS NOT NULL AND removed_at IS NULL
     GROUP BY year ORDER BY year
   `)) as unknown as Array<{ year: number; count: number }>;
   return rows;

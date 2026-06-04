@@ -6,7 +6,7 @@ import { artifacts, scoringEvents, scoringPrompts } from '@/lib/db/schema';
  * history (/methodology, /scoring-prompts) and the recent scoring activity (/scoring-log). All run
  * in Server Components against the shared client.
  */
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, isNull } from 'drizzle-orm';
 
 export async function getActivePrompt(): Promise<ScoringPrompt | null> {
   const [p] = await db
@@ -45,6 +45,8 @@ export async function listRecentScoringEvents(limit = 60): Promise<ScoringLogEnt
     })
     .from(scoringEvents)
     .leftJoin(artifacts, eq(scoringEvents.artifactId, artifacts.id))
+    // Removed artifacts drop out of the public scoring log too.
+    .where(isNull(artifacts.removedAt))
     .orderBy(desc(scoringEvents.createdAt))
     .limit(limit);
 }

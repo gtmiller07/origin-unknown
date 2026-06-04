@@ -9,7 +9,7 @@ import { artifacts, evidencePanels, scores, sources } from '@/lib/db/schema';
  * (migration 0006); cosine similarity is reported as 1 - distance. The full 1536-dim embedding is
  * never returned to the client — only the narrow display fields below.
  */
-import { desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 
 export type AxisKey =
   | 'origin'
@@ -59,7 +59,12 @@ export interface CorpusCard {
 
 /** Full evidence-panel payload for /artifact/[id]. Returns null if the id does not exist. */
 export async function getArtifactDetail(id: string): Promise<ArtifactDetail | null> {
-  const [artifact] = await db.select().from(artifacts).where(eq(artifacts.id, id)).limit(1);
+  // Removed artifacts are invisible to the public panel (returns null → the page 404s).
+  const [artifact] = await db
+    .select()
+    .from(artifacts)
+    .where(and(eq(artifacts.id, id), isNull(artifacts.removedAt)))
+    .limit(1);
   if (!artifact) return null;
 
   const source: SourceMeta | null = artifact.sourceId
@@ -97,6 +102,7 @@ export async function getArtifactDetail(id: string): Promise<ArtifactDetail | nu
       WHERE a.id <> ${id}
         AND a.embedding IS NOT NULL
         AND a.status = 'scored'
+        AND a.removed_at IS NULL
       ORDER BY a.embedding <=> (SELECT embedding FROM artifacts WHERE id = ${id})
       LIMIT 6
     `)) as unknown as AdjacentArtifact[];
@@ -121,7 +127,7 @@ export async function listRecentScored(limit = 48): Promise<CorpusCard[]> {
     })
     .from(artifacts)
     .leftJoin(sources, eq(artifacts.sourceId, sources.id))
-    .where(eq(artifacts.status, 'scored'))
+    .where(and(eq(artifacts.status, 'scored'), isNull(artifacts.removedAt)))
     .orderBy(desc(artifacts.firstSeenAt))
     .limit(limit);
 }

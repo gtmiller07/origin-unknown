@@ -55,7 +55,7 @@ export async function getAmbientParticles(limit = 400): Promise<Particle[]> {
     FROM artifacts a
     JOIN scores s ON s.artifact_id = a.id
     LEFT JOIN sources src ON src.id = a.source_id
-    WHERE a.status = 'scored'
+    WHERE a.status = 'scored' AND a.removed_at IS NULL
     GROUP BY a.id, src.name
     ORDER BY a.first_seen_at DESC
     LIMIT ${limit}
@@ -88,6 +88,7 @@ export async function getLiveStatus(): Promise<LiveStatus> {
   const [a] = (await db.execute(sql`
     SELECT count(*) FILTER (WHERE status = 'scored')::int AS scored, count(*)::int AS artifacts
     FROM artifacts
+    WHERE removed_at IS NULL
   `)) as unknown as Array<{ scored: number; artifacts: number }>;
   const [s] = (await db.execute(sql`
     SELECT count(*)::int AS sources FROM sources WHERE enabled = true
@@ -125,7 +126,7 @@ export async function listLivePublished(limit = 60): Promise<LiveItem[]> {
     FROM artifacts a
     JOIN scores s ON s.artifact_id = a.id
     LEFT JOIN sources src ON src.id = a.source_id
-    WHERE a.status = 'scored'
+    WHERE a.status = 'scored' AND a.removed_at IS NULL
     GROUP BY a.id, src.name
     ORDER BY a.first_seen_at DESC
     LIMIT ${limit}
