@@ -1,0 +1,386 @@
+/* Phase 7 transparency pages — museum-archive prose + data register.
+   Long-form pages use a ~66ch serif column; data pages (prompts, log) run wider with mono. */
+
+.page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: clamp(2.5rem, 6vw, 5rem) clamp(1.5rem, 5vw, 4rem) clamp(4rem, 10vh, 7rem);
+}
+.wide {
+  max-width: 1100px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #737373;
+  margin: 0 0 1.25rem;
+}
+
+.h1 {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-style: italic;
+  font-size: clamp(2.2rem, 5vw, 3.5rem);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  color: #171717;
+  margin: 0 0 1.25rem;
+  max-width: 18ch;
+}
+
+.lead {
+  font-family: var(--font-serif);
+  font-size: clamp(1.1rem, 1.8vw, 1.35rem);
+  line-height: 1.6;
+  color: #171717;
+  max-width: 60ch;
+  margin: 0 0 2.5rem;
+}
+
+/* Reading column for long-form prose */
+.prose {
+  max-width: 66ch;
+}
+.prose h2 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: clamp(1.25rem, 2.2vw, 1.6rem);
+  line-height: 1.2;
+  color: #171717;
+  margin: 2.75rem 0 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e3e0d8;
+}
+.prose h3 {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #b85c3b;
+  margin: 1.75rem 0 0.5rem;
+}
+.prose p {
+  font-family: var(--font-serif);
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: #171717;
+  margin: 0 0 1.1rem;
+}
+.prose ul,
+.prose ol {
+  font-family: var(--font-serif);
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: #171717;
+  margin: 0 0 1.1rem;
+  padding-left: 1.25rem;
+}
+.prose li {
+  margin-bottom: 0.55rem;
+}
+.prose li::marker {
+  color: #b85c3b;
+}
+.prose strong {
+  font-weight: 600;
+}
+.prose em {
+  font-style: italic;
+}
+.prose a {
+  color: #171717;
+}
+.prose a:hover {
+  color: #b85c3b;
+}
+
+.axisName {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  color: #b85c3b;
+}
+
+/* Editorial note — flags content the author should make his own */
+.editorNote {
+  border-left: 3px solid #b85c3b;
+  background: #f0e6d2;
+  padding: 0.85rem 1.1rem;
+  margin: 1.5rem 0;
+}
+.editorNote p {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  line-height: 1.6;
+  color: #5c5c5c;
+  margin: 0;
+}
+
+/* Verbatim prompt / code block */
+.codeLabel {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #737373;
+  margin: 1.5rem 0 0.5rem;
+}
+.code {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  line-height: 1.6;
+  color: #171717;
+  background: #f4f2ec;
+  border: 1px solid #d8d4ca;
+  border-left: 3px solid #737373;
+  padding: 1rem 1.15rem;
+  margin: 0 0 1.5rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+  max-height: 26rem;
+  overflow-y: auto;
+}
+
+/* Scoring-prompts version history */
+.versionList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.versionItem {
+  padding: 1.5rem 0;
+  border-top: 1px solid #d8d4ca;
+}
+.versionHead {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+.versionNum {
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  color: #171717;
+}
+.badge {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid #b85c3b;
+  color: #b85c3b;
+  padding: 0.15rem 0.45rem;
+}
+.badgeMuted {
+  border-color: #a3a3a3;
+  color: #a3a3a3;
+}
+.versionMeta {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: #737373;
+}
+.versionNotes {
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #171717;
+  margin: 0.5rem 0 0.75rem;
+  max-width: 70ch;
+}
+.disclosure > summary {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #737373;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+.disclosure > summary:hover {
+  color: #b85c3b;
+}
+
+/* Scoring log */
+.log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.logRow {
+  display: grid;
+  grid-template-columns: 9rem 8rem 1fr;
+  gap: 0.5rem 1.25rem;
+  padding: 0.85rem 0;
+  border-top: 1px solid #e3e0d8;
+  align-items: baseline;
+}
+@media (max-width: 720px) {
+  .logRow {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+}
+.logTime {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: #737373;
+}
+.logAxis {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: #b85c3b;
+}
+.logMain {
+  min-width: 0;
+}
+.logTitle {
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  color: #171717;
+}
+.logTitle a {
+  color: #171717;
+}
+.logTitle a:hover {
+  color: #b85c3b;
+}
+.logVal {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: #171717;
+  font-variant-numeric: tabular-nums;
+}
+.logReason {
+  font-family: var(--font-serif);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: #525252;
+  margin: 0.3rem 0 0;
+}
+
+/* Citation block */
+.citeBlock {
+  border: 1px solid #737373;
+  padding: 1.25rem 1.35rem;
+  margin: 1.5rem 0;
+}
+.citeRow {
+  padding: 0.65rem 0;
+  border-top: 1px dotted #d8d4ca;
+}
+.citeRow:first-child {
+  border-top: none;
+}
+.citeKey {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #737373;
+  margin: 0 0 0.3rem;
+}
+.citeVal {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: #171717;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Forms (takedown) */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 38rem;
+  margin-top: 1.5rem;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #737373;
+}
+.input,
+.textarea {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: #171717;
+  background: #fafaf8;
+  border: 1px solid #737373;
+  padding: 0.55rem 0.65rem;
+}
+.textarea {
+  min-height: 7rem;
+  resize: vertical;
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+.input:focus,
+.textarea:focus {
+  outline: 2px solid #b85c3b;
+  outline-offset: 1px;
+}
+.submit {
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fafaf8;
+  background: #171717;
+  border: 1px solid #171717;
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+}
+.submit:hover {
+  background: #b85c3b;
+  border-color: #b85c3b;
+}
+.submit:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.msg {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  color: #171717;
+}
+.err {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: #b85c3b;
+  margin: 0;
+}
+.artifactRef {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: #737373;
+  border: 1px solid #d8d4ca;
+  padding: 0.5rem 0.65rem;
+  word-break: break-all;
+}
+
+/* Back link */
+.back {
+  display: inline-block;
+  margin-top: 2.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  color: #737373;
+}

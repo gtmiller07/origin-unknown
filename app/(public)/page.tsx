@@ -54,16 +54,19 @@ export default function HomePage() {
         </p>
       </section>
 
-      {/* Finding line — placeholder until corpus is populated */}
+      {/* Finding line */}
       <p className={styles.findingLine} aria-live="polite">
         <em>
-          The instrument is starting up. The first artifacts will appear after the corpus is seeded.
+          The corpus is live and growing. Open any artifact to see how the instrument reads it.
         </em>
       </p>
 
-      {/* Entry affordance */}
+      {/* Entry affordances */}
       <div className={styles.entry}>
-        <a href="/tunnel" className={styles.entryLink}>
+        <a href="/corpus" className={styles.entryLink}>
+          Browse the corpus
+        </a>
+        <a href="/tunnel" className={styles.entryLink} style={{ marginLeft: '2rem' }}>
           Enter the tunnel
         </a>
       </div>
