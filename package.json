@@ -25,6 +25,7 @@
     "ingest": "node --env-file=.env.local --import tsx scripts/ingest.ts",
     "embed": "node --env-file=.env.local --import tsx scripts/embed.ts",
     "score": "node --env-file=.env.local --import tsx scripts/score.ts",
+    "score:batch": "node --env-file=.env.local --import tsx scripts/score-batch.ts",
     "gate": "node --env-file=.env.local --import tsx scripts/gate.ts",
     "gate:label": "node --env-file=.env.local --import tsx scripts/gate-label.ts",
     "gate:calibrate": "node --env-file=.env.local --import tsx scripts/gate-calibrate.ts",
