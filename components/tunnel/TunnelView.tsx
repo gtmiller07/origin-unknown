@@ -11,6 +11,7 @@ import { evaluatePredicate } from '@/lib/utils/variable-filter';
  */
 import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useState } from 'react';
+import { ComparativeGrids } from './ComparativeGrids';
 import { StationPanel } from './StationPanel';
 import styles from './tunnel.module.css';
 
@@ -140,6 +141,21 @@ export function TunnelView({
     return hidden;
   }, [activeStation, varOverrides, artifacts]);
 
+  // Artifacts in the era the active station opens — [its year, the next station's year) — for that
+  // station's comparative grids.
+  const eraArtifacts = useMemo(() => {
+    const st = activeStation;
+    if (!st || !st.comparativeGrids.length || st.startYear == null) return [];
+    const lo = st.startYear;
+    const next = stations
+      .map((s) => s.startYear)
+      .filter((y): y is number => y != null)
+      .sort((a, b) => a - b)
+      .find((y) => y > lo);
+    const hi = next ?? 9999;
+    return artifacts.filter((a) => a.year != null && a.year >= lo && a.year < hi);
+  }, [activeStation, stations, artifacts]);
+
   return (
     <div className={styles.stage}>
       {ready ? (
@@ -161,6 +177,16 @@ export function TunnelView({
           station={activeStation}
           values={varOverrides}
           onChange={(id, v) => setVarOverrides((o) => ({ ...o, [id]: v }))}
+        />
+      ) : null}
+
+      {ready && activeStation && activeStation.comparativeGrids.length ? (
+        <ComparativeGrids
+          grids={activeStation.comparativeGrids}
+          artifacts={eraArtifacts}
+          onSelect={(id) => {
+            window.location.href = `/artifact/${id}`;
+          }}
         />
       ) : null}
 
