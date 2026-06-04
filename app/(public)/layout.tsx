@@ -42,6 +42,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           <div className="nav-links">
             <a href="/tunnel">Tunnel</a>
             <a href="/live">Live feed</a>
+            <a href="/search">Search</a>
             <a href="/methodology">Methodology</a>
             <a href="/scoring-log">Scoring log</a>
             <a href="/notes">Notes</a>
