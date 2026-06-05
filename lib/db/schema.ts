@@ -145,6 +145,9 @@ export const artifacts = pgTable(
     // Human vetting (migration 0016): set when a curator reviews the asset in the vetting interview.
     vettedAt: timestamptz('vetted_at'),
     vettedBy: uuid('vetted_by').references(() => curators.id),
+    // Thumbnail health (migration 0019): last time thumbnail_url was probed for reachability.
+    // NULL = never checked. The heal-thumbnails cron processes oldest-first, ~monthly per artifact.
+    thumbnailCheckedAt: timestamptz('thumbnail_checked_at'),
     createdAt: timestamptz('created_at').defaultNow(),
     updatedAt: timestamptz('updated_at'),
   },

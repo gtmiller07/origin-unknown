@@ -27,6 +27,7 @@
     "enrich:thumbnails": "node --env-file=.env.local --import tsx scripts/enrich-thumbnails.ts",
     "stations:compute": "node --env-file=.env.local --import tsx scripts/compute-stations.ts",
     "neighbors:compute": "node --env-file=.env.local --import tsx scripts/compute-neighbors.ts",
+    "heal:thumbnails": "node --env-file=.env.local --import tsx scripts/heal-thumbnails.ts",
     "seed:vimeo": "node --env-file=.env.local --import tsx scripts/seed-vimeo-sources.ts",
     "ingest": "node --env-file=.env.local --import tsx scripts/ingest.ts",
     "embed": "node --env-file=.env.local --import tsx scripts/embed.ts",
