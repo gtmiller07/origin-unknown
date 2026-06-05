@@ -276,7 +276,7 @@ function useGuidedMode(
   enabled: boolean,
   stations: Station[],
   seekRef: React.MutableRefObject<number | null>,
-  setShowNarrative: (v: boolean) => void,
+  setNarratedStation: (s: Station | null) => void,
 ) {
   useEffect(() => {
     if (!enabled || !stations.length) return;
@@ -284,29 +284,27 @@ function useGuidedMode(
     let cancelled = false;
 
     async function run() {
-      // Start from 1998
       seekRef.current = zOfYear(1998);
       await delay(1500);
       for (const station of ordered) {
         if (cancelled) return;
         if (station.startYear == null) continue;
-        // Travel to station
+        // Travel to station, then narrate — decouple from activeStation so timing is exact.
         seekRef.current = zOfYear(station.startYear);
-        await delay(4000); // travel time
+        await delay(3500); // travel
         if (cancelled) return;
-        setShowNarrative(true);
-        await delay(4500); // pause + show description
+        setNarratedStation(station);
+        await delay(4500); // display narration
         if (cancelled) return;
-        setShowNarrative(false);
-        await delay(500);
+        setNarratedStation(null);
+        await delay(400);
       }
-      // Travel to 2026 exit
       if (!cancelled) seekRef.current = zOfYear(2026);
     }
 
     run();
     return () => { cancelled = true; };
-  }, [enabled, stations, seekRef, setShowNarrative]);
+  }, [enabled, stations, seekRef, setNarratedStation]);
 }
 
 function delay(ms: number): Promise<void> {
@@ -336,7 +334,7 @@ export function TunnelView({
   const [colorAxis, setColorAxis] = useState<ColorAxis>('origin');
   const [searchVisible, setSearchVisible] = useState(false);
   const [selectedArtifact, setSelectedArtifact] = useState<TunnelArtifact | null>(null);
-  const [showNarrative, setShowNarrative] = useState(false);
+  const [narratedStation, setNarratedStation] = useState<Station | null>(null);
 
   // Shared seek ref: written by sparkline, guided mode, deep-links; read by CameraRig.
   const seekRef = useRef<number | null>(initialYear ? zOfYear(initialYear) : null);
@@ -370,8 +368,9 @@ export function TunnelView({
     return () => window.removeEventListener('keydown', handler);
   }, [searchVisible]);
 
-  // Guided mode state machine (#13).
-  useGuidedMode(guidedMode, stations, seekRef, setShowNarrative);
+  // Guided mode state machine (#13) — stores the specific station being narrated,
+  // independent of camera position so the overlay shows reliably.
+  useGuidedMode(guidedMode, stations, seekRef, setNarratedStation);
 
   const activeStation = nearestStation(stations, year);
   const stationId = activeStation?.id;
@@ -459,11 +458,11 @@ export function TunnelView({
         <ArtifactPanel artifact={selectedArtifact} onClose={() => setSelectedArtifact(null)} />
       ) : null}
 
-      {/* Guided narrative overlay (#13) */}
-      {guidedMode && showNarrative && activeStation?.description ? (
+      {/* Guided narrative overlay (#13) — uses narratedStation, not activeStation */}
+      {guidedMode && narratedStation?.description ? (
         <div className={styles.guidedNarrative} aria-live="polite">
-          <p className={styles.guidedTitle}>{activeStation.title}</p>
-          <p className={styles.guidedDesc}>{activeStation.description}</p>
+          <p className={styles.guidedTitle}>{narratedStation.title}</p>
+          <p className={styles.guidedDesc}>{narratedStation.description}</p>
         </div>
       ) : null}
 
