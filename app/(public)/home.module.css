@@ -100,6 +100,102 @@
   margin: 0 0 clamp(3rem, 8vh, 6rem);
 }
 
+/* Featured artifacts rail */
+.rail {
+  padding: clamp(2rem, 5vh, 4rem) 0;
+  border-top: 1px solid #e5e5e5;
+}
+
+.railLabel {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #737373;
+  margin: 0 0 1rem;
+}
+
+.railScroll {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.railCard {
+  flex: 0 0 clamp(140px, 18vw, 200px);
+  scroll-snap-align: start;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.railCard:hover .railTitle {
+  color: #b85c3b;
+}
+
+.railThumb,
+.railThumbEmpty {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 4px;
+  background: #f0e6d2;
+}
+
+.railThumbEmpty {
+  display: flex;
+  align-items: flex-end;
+  padding: 0.4rem 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  color: #737373;
+}
+
+.railThumbEmpty::after {
+  content: attr(data-media);
+}
+
+.railTitle {
+  font-family: var(--font-serif);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: #171717;
+  margin: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.railMeta {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: #737373;
+  margin: 0;
+  text-transform: lowercase;
+}
+
+/* Finding line */
+.findingLine {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: #737373;
+  margin: 0 0 clamp(3rem, 8vh, 6rem);
+  max-width: 640px;
+  line-height: 1.7;
+}
+
+.findingLine strong {
+  color: #171717;
+}
+
 /* Entry affordance — small, lower-third, no button styling */
 .entry {
   padding-bottom: clamp(4rem, 10vh, 8rem);

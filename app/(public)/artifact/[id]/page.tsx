@@ -27,9 +27,32 @@ export async function generateMetadata({
   const { id } = await params;
   const detail = await getArtifactDetail(id);
   if (!detail) return { title: 'Artifact not found' };
+  const title = displayTitle(detail.artifact.title, detail.artifact.description);
+  const description =
+    detail.artifact.altText ??
+    detail.artifact.description?.slice(0, 160) ??
+    'Artifact evidence panel — Origin Unknown';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://originunknown.org';
+  const ogImage = detail.artifact.thumbnailUrl
+    ? [{ url: detail.artifact.thumbnailUrl, alt: title }]
+    : [{ url: `${siteUrl}/og-default.png`, alt: 'Origin Unknown' }];
   return {
-    title: displayTitle(detail.artifact.title, detail.artifact.description),
-    description: detail.artifact.altText ?? undefined,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `${siteUrl}/artifact/${detail.artifact.id}`,
+      siteName: 'Origin Unknown',
+      images: ogImage,
+      type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ogImage.map((i) => i.url),
+    },
   };
 }
 
