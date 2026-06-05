@@ -1,0 +1,660 @@
+/* Admin vetting surface. Utilitarian but consistent with the public palette (globals @theme). */
+
+.back {
+  display: inline-block;
+  margin-bottom: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  text-decoration: none;
+}
+.back:hover {
+  color: var(--color-accent);
+}
+
+/* ---------- Queue list ---------- */
+.queueHead {
+  margin-bottom: 1.5rem;
+}
+.queueHead h1 {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  margin: 0 0 0.35rem;
+}
+.lede {
+  max-width: 60ch;
+  color: var(--color-muted);
+  line-height: 1.5;
+  margin: 0 0 1rem;
+}
+.statRow {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin: 1rem 0 1.25rem;
+}
+.stat {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+.statNum {
+  font-size: 1.5rem;
+  color: var(--color-ink);
+  display: block;
+}
+.startBtn {
+  display: inline-block;
+  background: var(--color-accent);
+  color: #fff;
+  padding: 0.6rem 1.1rem;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+.startBtn:hover {
+  filter: brightness(1.05);
+}
+.doneBanner {
+  background: var(--color-highlight);
+  border-left: 3px solid var(--color-accent);
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+}
+.empty {
+  padding: 2rem;
+  text-align: center;
+  color: var(--color-muted);
+  border: 1px dashed #d4d4d4;
+  border-radius: 8px;
+}
+.queueList {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.queueItem {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.6rem;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+}
+.queueItem:hover {
+  border-color: var(--color-accent);
+  background: #fff;
+}
+.queueThumb,
+.queueThumbEmpty {
+  width: 84px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.queueThumbEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-highlight);
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+}
+.queueBody {
+  min-width: 0;
+  flex: 1;
+}
+.queueTitle {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  margin: 0 0 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.queueMeta {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-muted);
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.queueGo {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+/* ---------- Interview ---------- */
+.vetWrap {
+  max-width: 1100px;
+}
+.orient {
+  background: var(--color-highlight);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+.orient h1 {
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  margin: 0 0 0.4rem;
+}
+.orient p {
+  margin: 0.3rem 0 0;
+  max-width: 70ch;
+  line-height: 1.55;
+  font-size: 0.92rem;
+}
+.vetGrid {
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+@media (max-width: 820px) {
+  .vetGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.asset {
+  position: sticky;
+  top: 1rem;
+}
+.assetImg,
+.assetEmpty {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 8px;
+  background: var(--color-highlight);
+}
+.assetEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+.assetTitle {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  margin: 0.75rem 0 0.4rem;
+}
+.assetDesc {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #404040;
+  max-height: 9rem;
+  overflow: auto;
+  margin: 0 0 0.75rem;
+}
+.meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem 1rem;
+  margin: 0.5rem 0;
+  font-size: 0.8rem;
+}
+.meta div {
+  display: flex;
+  flex-direction: column;
+}
+.meta dt {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.meta dd {
+  margin: 0;
+  word-break: break-word;
+}
+.assetLinks {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 0.75rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+.assetLinks a {
+  color: var(--color-accent);
+}
+.paglen {
+  margin-top: 1rem;
+  border-top: 1px solid #e5e5e5;
+  padding-top: 0.75rem;
+}
+.paglen h3 {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin: 0 0 0.4rem;
+}
+.paglen ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: #404040;
+}
+
+/* axis cards */
+.axisList {
+  list-style: none;
+  counter-reset: axis;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 1rem;
+}
+.axisCard {
+  counter-increment: axis;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+  background: #fff;
+}
+.axisHead {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.axisLabel {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  margin: 0;
+}
+.axisLabel::before {
+  content: counter(axis) ". ";
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+.axisQ {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  font-style: italic;
+}
+.axisPlain {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin: 0.5rem 0 0.6rem;
+}
+.axisAnchors {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  color: var(--color-muted);
+  margin-bottom: 0.25rem;
+}
+.bar {
+  position: relative;
+  height: 22px;
+  background: var(--color-highlight);
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+.barFill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--color-accent);
+  opacity: 0.55;
+}
+.barNum {
+  position: relative;
+  margin-left: auto;
+  padding-right: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-ink);
+}
+.reasoning {
+  margin-top: 0.6rem;
+  font-size: 0.84rem;
+}
+.reasoning summary {
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-muted);
+}
+.reasoning p {
+  margin: 0.5rem 0 0;
+  line-height: 1.55;
+  color: #404040;
+}
+.choice {
+  border: 0;
+  padding: 0.6rem 0 0;
+  margin: 0.4rem 0 0;
+  display: flex;
+  gap: 1.25rem;
+}
+.choice label {
+  font-size: 0.85rem;
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+  cursor: pointer;
+}
+.revise {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.6rem;
+  border-top: 1px dashed #e5e5e5;
+  padding-top: 0.75rem;
+}
+.reviseRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.numInput {
+  width: 7rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #d4d4d4;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+}
+.textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #d4d4d4;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  text-transform: none;
+  resize: vertical;
+}
+
+.judgments {
+  margin-top: 1.25rem;
+  display: grid;
+  gap: 0.5rem;
+}
+.check {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.9rem;
+}
+.primary {
+  margin-top: 1.25rem;
+  background: var(--color-accent);
+  color: #fff;
+  border: 0;
+  padding: 0.7rem 1.3rem;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.primary:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.altActions {
+  margin-top: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  border-top: 1px solid #e5e5e5;
+  padding-top: 1rem;
+}
+.skip {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--color-muted);
+}
+.removeToggle {
+  background: none;
+  border: 0;
+  color: #b91c1c;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.removeForm {
+  margin-top: 1rem;
+  border: 1px solid #fca5a5;
+  background: #fef2f2;
+  border-radius: 8px;
+  padding: 1rem;
+  display: grid;
+  gap: 0.6rem;
+}
+.removeWarn {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: #7f1d1d;
+}
+.danger {
+  background: #b91c1c;
+  color: #fff;
+  border: 0;
+  padding: 0.6rem 1.1rem;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  cursor: pointer;
+  justify-self: start;
+}
+.danger:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.error {
+  color: #b91c1c;
+  font-size: 0.85rem;
+  margin: 0.75rem 0 0;
+}
+.muted {
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  margin: 0.3rem 0 0;
+}
+.notice {
+  padding: 2rem;
+  border: 1px dashed #d4d4d4;
+  border-radius: 8px;
+  color: var(--color-muted);
+}
+
+/* ---------- Removed view ---------- */
+.removedRow {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.6rem;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+}
+.removedReason {
+  margin: 0.3rem 0 0;
+  font-size: 0.84rem;
+  font-style: italic;
+  color: #404040;
+}
+.restoreBtn {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.restoreBtn:hover {
+  background: var(--color-accent);
+  color: #fff;
+}
+.restoreBtn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* ---------- Governance (takedowns + appeals) ---------- */
+.govList {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0 0;
+  display: grid;
+  gap: 1rem;
+}
+.govCard {
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+  background: #fff;
+}
+.govResolved {
+  opacity: 0.62;
+}
+.govHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.govStatus {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: var(--color-highlight);
+  color: var(--color-muted);
+}
+.govStatus[data-status='pending'] {
+  background: #fef3c7;
+  color: #92400e;
+}
+.govStatus[data-status='honored'],
+.govStatus[data-status='accepted'] {
+  background: #dcfce7;
+  color: #166534;
+}
+.govStatus[data-status='declined'],
+.govStatus[data-status='rejected'] {
+  background: #f3f4f6;
+  color: #374151;
+}
+.govDate {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-muted);
+}
+.govArtifact {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  margin: 0 0 0.4rem;
+}
+.govArtifact a {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.govFlag {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: #b91c1c;
+}
+.govAxis {
+  font-size: 0.85rem;
+  margin: 0 0 0.5rem;
+}
+.govMeta {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+}
+.govMeta div {
+  display: flex;
+  flex-direction: column;
+}
+.govMeta dt {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.govMeta dd {
+  margin: 0;
+}
+.govReason {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: #404040;
+  margin: 0.5rem 0 0.75rem;
+  white-space: pre-wrap;
+}
+.govActions {
+  border-top: 1px dashed #e5e5e5;
+  padding-top: 0.75rem;
+  display: grid;
+  gap: 0.6rem;
+}
+.govBtns {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.govResolution {
+  border-top: 1px dashed #e5e5e5;
+  padding-top: 0.6rem;
+  margin: 0.5rem 0 0;
+  font-size: 0.82rem;
+  color: var(--color-muted);
+}
+.ghostBtn {
+  background: none;
+  border: 1px solid #d4d4d4;
+  color: var(--color-ink);
+  padding: 0.6rem 1.1rem;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.ghostBtn:hover {
+  border-color: var(--color-muted);
+}
+.ghostBtn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}

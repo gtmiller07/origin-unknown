@@ -136,6 +136,15 @@ export const artifacts = pgTable(
     featured: boolean('featured').default(false),
     status: text('status').default('pending'),
     searchVector: tsvector('search_vector'),
+    // Soft delete (migration 0016): removal hides the artifact from every public surface but keeps
+    // the row and its scoring_events/takedown audit trail intact — a hard DELETE is blocked by those
+    // RESTRICT foreign keys anyway. Reversible: clear removedAt to restore.
+    removedAt: timestamptz('removed_at'),
+    removedReason: text('removed_reason'),
+    removedBy: uuid('removed_by').references(() => curators.id),
+    // Human vetting (migration 0016): set when a curator reviews the asset in the vetting interview.
+    vettedAt: timestamptz('vetted_at'),
+    vettedBy: uuid('vetted_by').references(() => curators.id),
     createdAt: timestamptz('created_at').defaultNow(),
     updatedAt: timestamptz('updated_at'),
   },
