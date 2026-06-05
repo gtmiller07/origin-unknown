@@ -13,18 +13,36 @@ import { useScriptDatabaseUrl } from './db-env';
 const UA = 'OriginUnknownResearch/1.0 (scholarly corpus; thumbnail fetch) generic-bot';
 
 async function wikiThumb(title: string): Promise<string | null> {
-  const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
+  // Try REST Summary API first (works for most articles with a main image).
   try {
-    const res = await fetch(url, {
+    const sum = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
+    const r = await fetch(sum, {
       headers: { 'user-agent': UA, accept: 'application/json' },
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(8000),
     });
-    if (!res.ok) return null;
-    const j = (await res.json()) as { thumbnail?: { source?: string } };
-    return j.thumbnail?.source ?? null;
-  } catch {
-    return null;
-  }
+    if (r.ok) {
+      const j = (await r.json()) as { thumbnail?: { source?: string } };
+      if (j.thumbnail?.source) return j.thumbnail.source;
+    }
+  } catch { /* fall through */ }
+
+  // Fallback: MediaWiki pageimages action (different image selection logic).
+  try {
+    const api = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageimages&format=json&pithumbsize=400`;
+    const r2 = await fetch(api, {
+      headers: { 'user-agent': UA, accept: 'application/json' },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (r2.ok) {
+      const j = (await r2.json()) as {
+        query?: { pages?: Record<string, { thumbnail?: { source?: string } }> };
+      };
+      const page = Object.values(j.query?.pages ?? {})[0];
+      if (page?.thumbnail?.source) return page.thumbnail.source;
+    }
+  } catch { /* no thumbnail available */ }
+
+  return null;
 }
 
 async function main() {
@@ -39,7 +57,13 @@ async function main() {
   `)) as unknown as Array<{ id: string; url: string }>;
 
   console.log(`Fetching Wikipedia thumbnails for ${rows.length} seed artifacts…`);
-  const map: Record<string, string> = {};
+  // Load existing so we don't lose previously found thumbnails.
+  let existing: Record<string, string> = {};
+  try {
+    const mod = await import('./seed-data/thumbnails');
+    existing = (mod as { THUMBNAILS?: Record<string, string> }).THUMBNAILS ?? {};
+  } catch { /* file may not exist yet */ }
+  const map: Record<string, string> = { ...existing };
   let ok = 0;
   for (const r of rows) {
     const raw = r.url.split('/wiki/')[1] ?? '';
