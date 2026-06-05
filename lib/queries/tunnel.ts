@@ -20,6 +20,11 @@ export interface TunnelArtifact {
   year: number | null;
   aesthetic: number | null;
   reach: number | null;
+  /** 0–1: how traceable the origin is (high = clear). Used to encode thesis in tile color drift. */
+  origin: number | null;
+  authenticity: number | null;
+  reciprocity: number | null;
+  crossboundary: number | null;
 }
 
 interface TunnelRow {
@@ -33,6 +38,10 @@ interface TunnelRow {
   year: number | null;
   aesthetic: string | null;
   reach: string | null;
+  origin: string | null;
+  authenticity: string | null;
+  reciprocity: string | null;
+  crossboundary: string | null;
 }
 
 export async function getTunnelArtifacts(limit = 2000): Promise<TunnelArtifact[]> {
@@ -43,7 +52,11 @@ export async function getTunnelArtifacts(limit = 2000): Promise<TunnelArtifact[]
       a.authorship_class AS authorship,
       extract(year FROM a.published_at)::int AS year,
       max(s.ai_proposed_value) FILTER (WHERE s.axis = 'aesthetic_signal') AS aesthetic,
-      max(s.ai_proposed_value) FILTER (WHERE s.axis = 'reach') AS reach
+      max(s.ai_proposed_value) FILTER (WHERE s.axis = 'reach') AS reach,
+      max(s.ai_proposed_value) FILTER (WHERE s.axis = 'origin') AS origin,
+      max(s.ai_proposed_value) FILTER (WHERE s.axis = 'diplomatic_authenticity') AS authenticity,
+      max(s.ai_proposed_value) FILTER (WHERE s.axis = 'diplomatic_reciprocity') AS reciprocity,
+      max(s.ai_proposed_value) FILTER (WHERE s.axis = 'diplomatic_cross_boundary') AS crossboundary
     FROM artifacts a
     JOIN scores s ON s.artifact_id = a.id
     WHERE a.status = 'scored' AND a.published_at IS NOT NULL AND a.removed_at IS NULL
@@ -62,6 +75,10 @@ export async function getTunnelArtifacts(limit = 2000): Promise<TunnelArtifact[]
     year: r.year,
     aesthetic: r.aesthetic == null ? null : Number(r.aesthetic),
     reach: r.reach == null ? null : Number(r.reach),
+    origin: r.origin == null ? null : Number(r.origin),
+    authenticity: r.authenticity == null ? null : Number(r.authenticity),
+    reciprocity: r.reciprocity == null ? null : Number(r.reciprocity),
+    crossboundary: r.crossboundary == null ? null : Number(r.crossboundary),
   }));
 }
 
@@ -80,6 +97,8 @@ export interface ComparativeGridSpec {
   id: string;
   label: string;
   description: string;
+  /** One-sentence curatorial claim — what the juxtaposition argues. */
+  claim?: string;
   group_by: string;
   sort_by: string;
   max_per_group: number;

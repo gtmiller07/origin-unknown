@@ -62,9 +62,11 @@ export function FlatTunnel({
       <header className={styles.flatHead}>
         <h1 className={styles.flatTitle}>The tunnel</h1>
         <p className={styles.flatSub}>
-          Twenty-five years of cultural production as a corridor — 1998 to the present. This is the
-          flat, accessible reading; the 3D corridor widens as the volume explodes. Each chip opens
-          an evidence panel.
+          Twenty-five years of cultural production as a corridor — 1998 to the present. When the
+          technical floor of production drops to zero and origin becomes ambiguous, what determines
+          which content travels diplomatically? This timeline is the flat, accessible reading.
+          Each chip opens an evidence panel.{' '}
+          <a href="/tunnel">Enter the 3D corridor →</a>
         </p>
       </header>
 
@@ -82,13 +84,13 @@ export function FlatTunnel({
                 {station.description ? (
                   <p className={styles.stationDesc}>{station.description}</p>
                 ) : null}
-                {station.interactiveVariables.length || station.comparativeGrids.length ? (
-                  <p className={styles.stationMeta}>
-                    {station.interactiveVariables.length} interactive variable(s) ·{' '}
-                    {station.comparativeGrids.length} comparative grid(s) — interactive in the 3D
-                    view
-                  </p>
-                ) : null}
+                <p className={styles.stationMeta}>
+                  <a href="/methodology">Why this era matters →</a>
+                  {station.interactiveVariables.length || station.comparativeGrids.length ? (
+                    <> · {station.interactiveVariables.length} interactive variable(s) ·{' '}
+                    {station.comparativeGrids.length} comparative grid(s) in the 3D view</>
+                  ) : null}
+                </p>
               </div>
             ) : null}
             <div className={styles.flatYearHead}>

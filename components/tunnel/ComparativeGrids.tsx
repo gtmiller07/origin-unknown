@@ -66,6 +66,7 @@ function GridBody({
 
   return (
     <div className={styles.cmpPanel}>
+      {grid.claim ? <blockquote className={styles.cmpClaim}>{grid.claim}</blockquote> : null}
       <p className={styles.cmpDesc}>{grid.description}</p>
       {entries.map(([k, list]) => (
         <div key={k} className={styles.cmpGroup}>

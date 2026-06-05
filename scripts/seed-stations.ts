@@ -22,6 +22,8 @@ interface Grid {
   id: string;
   label: string;
   description: string;
+  /** One-sentence curatorial claim — what the juxtaposition argues (#11). */
+  claim?: string;
   group_by: string;
   sort_by: string;
   max_per_group: number;
@@ -55,15 +57,12 @@ const STATIONS: SeedStation[] = [
         filter_predicate: 'year <= 2010',
       },
       {
-        id: 'mobile_first_capture',
-        label: 'Mobile-first capture',
-        type: 'slider',
-        default: 30,
-        unit: '%',
-        min: 0,
-        max: 100,
-        description: 'Adjusts the proportion of mobile-captured artifacts visible at this era.',
-        filter_predicate: 'mobile_share <= value',
+        id: 'high_reach_only',
+        label: 'High reach only',
+        type: 'toggle',
+        default: false,
+        description: 'When on, shows only artifacts with reach score above 0.5 — the breakout hits of the early upload era.',
+        filter_predicate: 'reach >= 0.5',
       },
     ],
     comparativeGrids: [
@@ -72,6 +71,7 @@ const STATIONS: SeedStation[] = [
         label: 'Vernacular forms by region',
         description:
           'How the early-YouTube vernacular took different forms in different language communities.',
+        claim: 'Regional vernacular forms diverge most sharply when reach is lowest.',
         group_by: 'languageCodes[0]',
         sort_by: 'published_at',
         max_per_group: 16,
@@ -92,6 +92,7 @@ const STATIONS: SeedStation[] = [
         label: 'Self-representation across cities',
         description:
           'Smartphone-shot self-representation, grouped by origin — the Selfiecity lens.',
+        claim: 'Self-representation is the most culturally specific act the camera enables.',
         group_by: 'origin_country_codes[0]',
         sort_by: 'published_at',
         max_per_group: 16,
@@ -142,12 +143,12 @@ const STATIONS: SeedStation[] = [
         filter_predicate: "ai_mediation == 'ai_generated'",
       },
       {
-        id: 'c2pa_attested',
-        label: 'C2PA-attested only',
+        id: 'human_made_only',
+        label: 'Human-made only',
         type: 'toggle',
         default: false,
-        description: 'When on, displays only artifacts with C2PA provenance assertions.',
-        filter_predicate: 'has_c2pa == true',
+        description: 'When on, removes AI-generated artifacts — revealing how few non-AI items travel in this era.',
+        filter_predicate: "ai_mediation == 'human_made'",
       },
     ],
     comparativeGrids: [
@@ -155,7 +156,8 @@ const STATIONS: SeedStation[] = [
         id: 'cinematic_style_by_model',
         label: 'Cinematic style by model',
         description:
-          'Grouped by the generator (Kling, Runway, Sora, Midjourney…), revealing each model’s fingerprint.',
+          'Grouped by AI-mediation class, sorted by aesthetic signal — the model fingerprint is the new auteur mark.',
+        claim: "Model fingerprints are as legible as a cinematographer's hand.",
         group_by: 'ai_generation_metadata.model',
         sort_by: 'scores.aesthetic_signal',
         max_per_group: 16,

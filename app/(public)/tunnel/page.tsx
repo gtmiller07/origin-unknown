@@ -19,15 +19,27 @@ export const metadata: Metadata = {
 export default async function TunnelPage({
   searchParams,
 }: {
-  searchParams: Promise<{ mode?: string }>;
+  searchParams: Promise<{ mode?: string; year?: string; artifact?: string }>;
 }) {
-  const { mode } = await searchParams;
-  const [artifacts, stations] = await Promise.all([getTunnelArtifacts(600), getStations()]);
+  const { mode, year, artifact } = await searchParams;
+  // Default limit 2000 — all scored+dated artifacts. Passed explicitly for clarity.
+  const [artifacts, stations] = await Promise.all([getTunnelArtifacts(2000), getStations()]);
 
   if (mode === 'flat') {
     return <FlatTunnel artifacts={artifacts} stations={stations} />;
   }
 
   const density = await getYearDensity();
-  return <TunnelView artifacts={artifacts} stations={stations} density={density} />;
+  const initialYear = year ? Math.max(1998, Math.min(2026, Number.parseInt(year, 10))) : null;
+  const focusArtifactId = artifact ?? null;
+  return (
+    <TunnelView
+      artifacts={artifacts}
+      stations={stations}
+      density={density}
+      initialYear={Number.isFinite(initialYear) ? initialYear : null}
+      focusArtifactId={focusArtifactId}
+      guidedMode={mode === 'play'}
+    />
+  );
 }

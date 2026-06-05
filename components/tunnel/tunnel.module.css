@@ -101,6 +101,305 @@
   margin: 0.15rem 0 0;
 }
 
+/* ---------- Era framing card (#12) ---------- */
+.eraFrame {
+  position: absolute;
+  left: clamp(1rem, 4vw, 3rem);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 6;
+  width: min(320px, 90vw);
+  background: rgba(12, 12, 14, 0.92);
+  border-left: 3px solid #b85c3b;
+  border-radius: 0 8px 8px 0;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  animation: slideInLeft 0.4s ease;
+}
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateY(-50%) translateX(-1.5rem); }
+  to   { opacity: 1; transform: translateY(-50%) translateX(0); }
+}
+.eraFrameTitle {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  color: #f0e6d2;
+  margin: 0 0 0.5rem;
+}
+.eraFrameDesc {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: #b8b8b8;
+  margin: 0;
+}
+.eraFrameDismiss {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  background: none;
+  border: 0;
+  color: #737373;
+  font-size: 1rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* ---------- Research findings banner (#15) ---------- */
+.finding {
+  position: absolute;
+  bottom: clamp(4rem, 12vh, 6rem);
+  right: clamp(1rem, 4vw, 3rem);
+  z-index: 5;
+  max-width: 340px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: #cfcfcf;
+  background: rgba(8, 8, 8, 0.82);
+  border-left: 2px solid #459e8f;
+  padding: 0.6rem 0.8rem;
+  border-radius: 0 6px 6px 0;
+}
+.findingLabel {
+  display: block;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #459e8f;
+  margin-bottom: 0.3rem;
+}
+
+/* ---------- Search (#20) ---------- */
+.search {
+  position: absolute;
+  top: clamp(3rem, 10vh, 5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  width: min(480px, 90vw);
+}
+.searchInput {
+  width: 100%;
+  background: rgba(10, 10, 12, 0.95);
+  border: 1px solid #b85c3b;
+  border-radius: 6px;
+  padding: 0.65rem 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: #f0e6d2;
+  outline: none;
+  box-sizing: border-box;
+}
+.searchResults {
+  list-style: none;
+  padding: 0;
+  margin: 0.25rem 0 0;
+  background: rgba(10, 10, 12, 0.95);
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.searchResult {
+  display: block;
+  width: 100%;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid #2a2a2a;
+  padding: 0.5rem 0.9rem;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: #cfcfcf;
+  cursor: pointer;
+}
+.searchResult:hover { background: rgba(184, 92, 59, 0.15); }
+.searchResult:last-child { border-bottom: 0; }
+.searchResultYear {
+  color: #b85c3b;
+  margin-right: 0.6rem;
+}
+
+/* ---------- Axis-remap lens (#18) ---------- */
+.axisRemap {
+  position: absolute;
+  top: clamp(0.75rem, 3vh, 1.75rem);
+  right: clamp(1rem, 4vw, 3rem);
+  z-index: 5;
+  display: flex;
+  gap: 0.35rem;
+}
+.axisRemapBtn,
+.axisRemapOn {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid #3a3a3a;
+  background: rgba(10, 10, 10, 0.7);
+  color: #9a9a9a;
+  cursor: pointer;
+}
+.axisRemapOn {
+  background: rgba(184, 92, 59, 0.85);
+  border-color: #b85c3b;
+  color: #fff;
+}
+
+/* ---------- Guided narrative overlay (#13) ---------- */
+.guidedNarrative {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 8;
+  width: min(500px, 80vw);
+  background: rgba(8, 8, 10, 0.92);
+  border: 1px solid #2a2a2a;
+  border-left: 3px solid #b85c3b;
+  border-radius: 0 12px 12px 0;
+  padding: 1.5rem 2rem;
+  text-align: left;
+  animation: fadeIn 0.6s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; } to { opacity: 1; }
+}
+.guidedTitle {
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  color: #f0e6d2;
+  margin: 0 0 0.75rem;
+}
+.guidedDesc {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: #b8b8b8;
+  margin: 0;
+}
+
+/* ---------- Click-to-orbit artifact panel (#21) ---------- */
+.orbitPanel {
+  position: absolute;
+  right: clamp(1rem, 4vw, 3rem);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 6;
+  width: min(280px, 38vw);
+  background: rgba(8, 8, 10, 0.94);
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 1rem;
+  animation: slideInRight 0.3s ease;
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateY(-50%) translateX(1rem); }
+  to   { opacity: 1; transform: translateY(-50%) translateX(0); }
+}
+.orbitClose {
+  position: absolute;
+  top: 0.5rem; right: 0.75rem;
+  background: none; border: 0;
+  color: #737373; font-size: 1.1rem; cursor: pointer;
+}
+.orbitThumb,
+.orbitThumbEmpty {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 0.6rem;
+}
+.orbitThumbEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1a1a1e;
+  color: #555;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+.orbitTitle {
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  color: #e0e0e0;
+  margin: 0 0 0.5rem;
+  line-height: 1.3;
+}
+.orbitMeta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.3rem;
+  margin: 0 0 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+}
+.orbitMeta div { display: flex; flex-direction: column; }
+.orbitMeta dt { color: #737373; text-transform: uppercase; }
+.orbitMeta dd { color: #cfcfcf; margin: 0; }
+.orbitAxes {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.75rem;
+  display: grid;
+  gap: 0.3rem;
+}
+.orbitAxisLabel {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  color: #737373;
+  margin-bottom: 0.15rem;
+}
+.orbitBar {
+  position: relative;
+  height: 14px;
+  background: #1e1e22;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+}
+.orbitBarFill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: #b85c3b;
+  opacity: 0.55;
+  border-radius: 2px;
+}
+.orbitBarNum {
+  position: relative;
+  margin-left: auto;
+  padding-right: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: #cfcfcf;
+}
+.orbitLink {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: #b85c3b;
+  text-decoration: none;
+}
+
+/* HUD search button */
+.hudBtn {
+  background: none;
+  border: 0;
+  color: #8a8a8a;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+.hudBtn:hover { color: #b85c3b; }
+
 /* ---------- Comparative grids (Stage B) ---------- */
 .cmpWrap {
   position: absolute;
@@ -154,6 +453,15 @@
   border: 1px solid #2a2a2a;
   border-radius: 8px;
   padding: 0.75rem;
+}
+.cmpClaim {
+  font-family: var(--font-serif);
+  font-size: 0.88rem;
+  font-style: italic;
+  color: #f0e6d2;
+  border-left: 2px solid #b85c3b;
+  margin: 0 0 0.5rem;
+  padding: 0.3rem 0.6rem;
 }
 .cmpDesc {
   font-family: var(--font-serif);
