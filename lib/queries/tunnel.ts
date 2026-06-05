@@ -25,6 +25,10 @@ export interface TunnelArtifact {
   authenticity: number | null;
   reciprocity: number | null;
   crossboundary: number | null;
+  /** Angular pull from the artifact's nearest neighbor (#9 embedding-clustered placement).
+   *  Null when no neighbor data exists. Used to gently attract semantically similar tiles. */
+  /** Top-2 neighbor artifact ids for lineage thread rendering (#10) and cluster pull (#9). */
+  neighborIds: string[];
 }
 
 interface TunnelRow {
@@ -42,6 +46,7 @@ interface TunnelRow {
   authenticity: string | null;
   reciprocity: string | null;
   crossboundary: string | null;
+  neighborIds: string | null; // JSON array of uuid strings
 }
 
 export async function getTunnelArtifacts(limit = 2000): Promise<TunnelArtifact[]> {
@@ -56,7 +61,13 @@ export async function getTunnelArtifacts(limit = 2000): Promise<TunnelArtifact[]
       max(s.ai_proposed_value) FILTER (WHERE s.axis = 'origin') AS origin,
       max(s.ai_proposed_value) FILTER (WHERE s.axis = 'diplomatic_authenticity') AS authenticity,
       max(s.ai_proposed_value) FILTER (WHERE s.axis = 'diplomatic_reciprocity') AS reciprocity,
-      max(s.ai_proposed_value) FILTER (WHERE s.axis = 'diplomatic_cross_boundary') AS crossboundary
+      max(s.ai_proposed_value) FILTER (WHERE s.axis = 'diplomatic_cross_boundary') AS crossboundary,
+      -- #9/#10 Top-2 neighbor ids for wall-cluster pull and lineage threads.
+      -- Returns null when artifact_neighbors table is empty (before compute-neighbors runs).
+      (SELECT json_agg(an.neighbor_id ORDER BY an.rank)
+       FROM artifact_neighbors an
+       WHERE an.artifact_id = a.id AND an.rank < 2
+      )::text AS "neighborIds"
     FROM artifacts a
     JOIN scores s ON s.artifact_id = a.id
     WHERE a.status = 'scored' AND a.published_at IS NOT NULL AND a.removed_at IS NULL
@@ -79,6 +90,10 @@ export async function getTunnelArtifacts(limit = 2000): Promise<TunnelArtifact[]
     authenticity: r.authenticity == null ? null : Number(r.authenticity),
     reciprocity: r.reciprocity == null ? null : Number(r.reciprocity),
     crossboundary: r.crossboundary == null ? null : Number(r.crossboundary),
+    neighborIds: (() => {
+      try { return r.neighborIds ? (JSON.parse(r.neighborIds) as string[]) : []; }
+      catch { return []; }
+    })(),
   }));
 }
 

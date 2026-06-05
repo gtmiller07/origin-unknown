@@ -101,17 +101,34 @@ function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
 
-/** Shared world-space placement for a tile. Angle driven by origin side + stable jitter. */
+/**
+ * Shared world-space placement. Angle = origin side + stable jitter, with a 30% semantic pull
+ * toward the top neighbor's position (#9 embedding-clustered placement). When the neighbor table
+ * is populated by compute-neighbors, artifacts with similar embeddings subtly converge in angle.
+ */
 function tileTransform(
   a: TunnelArtifact,
-  rFn: (y: number) => number
+  rFn: (y: number) => number,
+  posById?: Map<string, { ang: number }>
 ): { x: number; y: number; z: number; scale: number; ang: number } {
   const yr = a.year ?? Y1;
   const z = zOfYear(yr);
   const r = rFn(yr) * 0.9;
   const rnd = hash01(a.id);
   const base = a.originCode ? (isWestern(a.originCode) ? Math.PI : 0) : rnd < 0.5 ? Math.PI : 0;
-  const ang = base + (rnd - 0.5) * Math.PI * 0.85;
+  let ang = base + (rnd - 0.5) * Math.PI * 0.85;
+
+  // #9 Cluster pull: blend 70% base angle + 30% top-neighbor's angle (if available).
+  if (posById && a.neighborIds.length > 0) {
+    const topNeighbor = posById.get(a.neighborIds[0] ?? '');
+    if (topNeighbor) {
+      // Angular lerp respecting wrap-around.
+      let diff = topNeighbor.ang - ang;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      ang = ang + diff * 0.3;
+    }
+  }
   return { x: r * Math.cos(ang), y: r * Math.sin(ang), z, scale: 0.5 + rFn(yr) * 0.16, ang };
 }
 
@@ -301,6 +318,61 @@ function DensityGlow({ density, rFn }: { density: Array<{ year: number; count: n
   return <lineSegments geometry={geometry} material={mat} />;
 }
 
+// ─── Lineage threads (#10) — faint lines connecting semantic neighbors ─────────
+
+function LineageThreads({
+  artifacts,
+  rFn,
+}: {
+  artifacts: TunnelArtifact[];
+  rFn: (y: number) => number;
+}) {
+  const camera = useThree((s) => s.camera);
+  const ref = useRef<THREE.LineSegments>(null);
+  const posById = useMemo(
+    () => new Map(artifacts.map((a) => [a.id, tileTransform(a, rFn)])),
+    [artifacts, rFn]
+  );
+
+  useFrame(() => {
+    const ls = ref.current;
+    if (!ls) return;
+    const camZ = camera.position.z;
+    const WINDOW = 6; // only draw threads within ±6 Z units of camera
+    const pos: number[] = [];
+    for (const a of artifacts) {
+      const src = posById.get(a.id);
+      if (!src || Math.abs(src.z - camZ) > WINDOW) continue;
+      for (const nid of a.neighborIds.slice(0, 2)) {
+        const dst = posById.get(nid);
+        if (!dst) continue;
+        pos.push(src.x * 0.95, src.y * 0.95, src.z, dst.x * 0.95, dst.y * 0.95, dst.z);
+      }
+    }
+    const geo = ls.geometry;
+    const attr = geo.getAttribute('position') as THREE.BufferAttribute | undefined;
+    if (!attr || attr.count * 3 < pos.length) {
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    } else {
+      (attr as THREE.BufferAttribute).set(pos);
+      (attr as THREE.BufferAttribute).needsUpdate = true;
+      geo.setDrawRange(0, pos.length / 3);
+    }
+  });
+
+  const geometry = useMemo(() => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute([], 3));
+    return g;
+  }, []);
+  const material = useMemo(
+    () => new THREE.LineBasicMaterial({ color: 0xb85c3b, transparent: true, opacity: 0.07 }),
+    []
+  );
+  useEffect(() => () => { geometry.dispose(); material.dispose(); }, [geometry, material]);
+  return <lineSegments ref={ref} geometry={geometry} material={material} />;
+}
+
 // ─── Animated instanced quads (#2 float + #3 streak) ─────────────────────────
 
 interface TileBase {
@@ -325,6 +397,8 @@ function Tiles({
 }) {
   const ref = useRef<THREE.InstancedMesh>(null);
   const basesRef = useRef<TileBase[]>([]);
+  // #17 Animated filter transitions: per-tile current scale, lerps toward target each frame.
+  const currentScales = useRef<Float32Array>(new Float32Array(0));
   const geometry = useMemo(() => new THREE.PlaneGeometry(1, 1), []);
   const material = useMemo(
     () => new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true, opacity: 0.9 }),
@@ -335,9 +409,11 @@ function Tiles({
   useLayoutEffect(() => {
     const mesh = ref.current;
     if (!mesh) return;
+    // Build posById for cluster pull (first pass without pull to get base angles).
+    const basePos = new Map(artifacts.map((a) => [a.id, tileTransform(a, rFn)]));
     // Recompute base transforms + drift params + hidden state.
     basesRef.current = artifacts.map((a) => {
-      const { x, y, z, scale } = tileTransform(a, rFn);
+      const { x, y, z, scale } = tileTransform(a, rFn, basePos);
       return {
         x, y, z, scale,
         phase: hash01(a.id) * Math.PI * 2,
@@ -345,6 +421,15 @@ function Tiles({
         hidden: hiddenIds?.has(a.id) ?? false,
       };
     });
+    // Grow the animated-scale buffer if needed; new tiles start at their target.
+    if (currentScales.current.length < artifacts.length) {
+      const next = new Float32Array(artifacts.length);
+      next.set(currentScales.current);
+      for (let i = currentScales.current.length; i < artifacts.length; i++) {
+        next[i] = basesRef.current[i]?.scale ?? 0;
+      }
+      currentScales.current = next;
+    }
     // Set colors (matrices set by useFrame). Re-runs when colorAxis changes.
     artifacts.forEach((a, i) => {
       mesh.setColorAt(i, tileColor(a, colorAxis));
@@ -361,13 +446,18 @@ function Tiles({
     // Slit-scan: stretch Z proportional to camera velocity.
     const stretchZ = 1 + Math.min(Math.abs(vel) * 2.5, 2.0);
     const dummy = new THREE.Object3D();
+    const cs = currentScales.current;
     for (let i = 0; i < bases.length; i++) {
       const b = bases[i];
       if (!b) continue;
+      // #17 Lerp current scale toward target (smooth show/hide over ~10 frames).
+      const target = b.scale; // already 0 when hidden
+      cs[i] = cs[i] != null ? cs[i] + (target - cs[i]) * 0.1 : target;
+      const sc = cs[i] ?? 0;
       const drift = Math.sin(t * b.speed + b.phase) * 0.04;
       dummy.position.set(b.x, b.y + drift, b.z);
       dummy.lookAt(0, 0, b.z);
-      dummy.scale.set(b.scale, b.scale, b.scale * stretchZ);
+      dummy.scale.set(sc, sc, sc * stretchZ);
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
     }
@@ -674,6 +764,7 @@ export default function TunnelScene({
   density,
   seekRef,
   colorAxis = 'origin',
+  showLineage = true,
 }: {
   artifacts: TunnelArtifact[];
   stations: Station[];
@@ -683,6 +774,7 @@ export default function TunnelScene({
   density: Array<{ year: number; count: number }>;
   seekRef: React.MutableRefObject<number | null>;
   colorAxis?: 'origin' | 'aiMediation' | 'authorship';
+  showLineage?: boolean;
 }) {
   const router = useRouter();
   const [dissolving, setDissolving] = useState(false);
@@ -723,6 +815,9 @@ export default function TunnelScene({
           <TexturedTiles artifacts={artifacts} onSelect={onSelect} hiddenIds={hiddenIds} velocityRef={velocityRef} rFn={rFn} />
         </>
       )}
+
+      {/* #10 Lineage threads — semantic neighbors within camera window */}
+      {showLineage ? <LineageThreads artifacts={artifacts} rFn={rFn} /> : null}
 
       {/* #4 Parallax dust */}
       <AmbientParticles />
