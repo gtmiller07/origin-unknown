@@ -29,6 +29,7 @@ export const ERA_2018_2024: SeedArtifact[] = [
   },
   {
     externalId: 'e4-blinding-lights',
+    youtubeId: '4NRXx6U8ABQ',
     title: 'The Weeknd, “Blinding Lights” (2019)',
     description: 'The biggest Billboard Hot 100 song of all time by chart longevity, amplified by a TikTok dance.',
     url: 'https://en.wikipedia.org/wiki/Blinding_Lights',
@@ -49,6 +50,7 @@ export const ERA_2018_2024: SeedArtifact[] = [
   },
   {
     externalId: 'e4-drivers-license',
+    youtubeId: 'ZmDBbnmKpqQ',
     title: 'Olivia Rodrigo, “drivers license” (2021)',
     description: 'A debut single that broke streaming records overnight, propelled by TikTok narrative speculation.',
     url: 'https://en.wikipedia.org/wiki/Drivers_License_(song)',
@@ -69,6 +71,7 @@ export const ERA_2018_2024: SeedArtifact[] = [
   },
   {
     externalId: 'e4-wap',
+    youtubeId: 'hsm4poTWjMs',
     title: 'Cardi B ft. Megan Thee Stallion, “WAP” (2020)',
     description: 'A chart-topping single and cultural-debate flashpoint amplified by a TikTok dance challenge.',
     url: 'https://en.wikipedia.org/wiki/WAP_(song)',
@@ -210,6 +213,7 @@ export const ERA_2018_2024: SeedArtifact[] = [
   },
   {
     externalId: 'e4-wednesday-dance',
+    youtubeId: 'NakTu_VZxJ0',
     title: 'Wednesday dance (2022)',
     description: 'Jenna Ortega’s Netflix dance scene, set by fans to a Lady Gaga song, that became a global TikTok trend — cross-platform, cross-soundtrack virality.',
     url: 'https://en.wikipedia.org/wiki/Wednesday_(TV_series)',
@@ -230,6 +234,7 @@ export const ERA_2018_2024: SeedArtifact[] = [
   },
   {
     externalId: 'e4-encanto-bruno',
+    youtubeId: 'bvWRMAU6V-c',
     title: 'Encanto — “We Don’t Talk About Bruno” (2021)',
     description: 'A Disney song set in Colombia that topped charts globally and became a TikTok staple — Latin-coded Disney reaching universal reach.',
     url: 'https://en.wikipedia.org/wiki/We_Don%27t_Talk_About_Bruno',
@@ -430,6 +435,7 @@ export const ERA_2018_2024: SeedArtifact[] = [
   },
   {
     externalId: 'e4-parasite',
+    youtubeId: 'isOGD_7hNIY',
     title: 'Parasite (2019)',
     description: 'Bong Joon-ho’s film, the first non-English-language Best Picture winner — the high-water mark of subtitled cinema crossing fully into the Western center.',
     url: 'https://en.wikipedia.org/wiki/Parasite_(2019_film)',
@@ -450,6 +456,7 @@ export const ERA_2018_2024: SeedArtifact[] = [
   },
   {
     externalId: 'e4-squid-game',
+    youtubeId: 'oqxAJKy0ii4',
     title: 'Squid Game (2021)',
     description: 'Netflix’s most-watched series ever — Korean storytelling becoming the platform’s biggest global phenomenon.',
     url: 'https://en.wikipedia.org/wiki/Squid_Game',
@@ -470,6 +477,7 @@ export const ERA_2018_2024: SeedArtifact[] = [
   },
   {
     externalId: 'e4-bts-dynamite',
+    youtubeId: 'gdZLi9oWNZg',
     title: 'BTS, “Dynamite” (2020)',
     description: 'BTS’s first all-English single and first US number one — Korean pop reaching the absolute top of the Western chart.',
     url: 'https://en.wikipedia.org/wiki/Dynamite_(BTS_song)',
@@ -490,6 +498,7 @@ export const ERA_2018_2024: SeedArtifact[] = [
   },
   {
     externalId: 'e4-money-heist',
+    youtubeId: 'Hkl0w0NrHCo',
     title: 'Money Heist (La Casa de Papel) global wave (2018–2021)',
     description: 'A Spanish series revived into Netflix’s biggest non-English hit of its time — its red jumpsuits and Dalí masks a global protest symbol.',
     url: 'https://en.wikipedia.org/wiki/Money_Heist',
@@ -510,6 +519,7 @@ export const ERA_2018_2024: SeedArtifact[] = [
   },
   {
     externalId: 'e4-jerusalema',
+    youtubeId: 'fCZVL_8D048',
     title: 'Master KG, “Jerusalema” dance challenge (2020)',
     description: 'A South African gospel-house track whose dance challenge swept the world — an African-originated global participatory hit.',
     url: 'https://en.wikipedia.org/wiki/Jerusalema_(song)',
@@ -530,6 +540,7 @@ export const ERA_2018_2024: SeedArtifact[] = [
   },
   {
     externalId: 'e4-love-nwantiti',
+    youtubeId: 'GRuMFRMXEbs',
     title: 'CKay, “Love Nwantiti” (2021 TikTok wave)',
     description: 'A Nigerian Afrobeats song that became a global TikTok smash — West African pop traveling natively through the platform.',
     url: 'https://en.wikipedia.org/wiki/Love_Nwantiti',
@@ -570,6 +581,7 @@ export const ERA_2018_2024: SeedArtifact[] = [
   },
   {
     externalId: 'e4-naatu-naatu',
+    youtubeId: '4_eEgJhsBMo',
     title: '“Naatu Naatu” from RRR (2022)',
     description: 'The first song from an Indian film to win the Academy Award for Best Original Song — Telugu cinema at the global summit.',
     url: 'https://en.wikipedia.org/wiki/Naatu_Naatu',

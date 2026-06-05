@@ -7,6 +7,7 @@ const ERA = '2005–2012';
 export const ERA_2005_2012: SeedArtifact[] = [
   {
     externalId: 'e2-evolution-of-dance',
+    youtubeId: 'dMH0bHeiRNg',
     title: 'Evolution of Dance (Judson Laipply, 2006)',
     description: 'A six-minute dance medley that became one of YouTube’s first mega-viral videos and most-viewed clip of the early platform.',
     url: 'https://en.wikipedia.org/wiki/Evolution_of_Dance',
@@ -68,6 +69,7 @@ export const ERA_2005_2012: SeedArtifact[] = [
   },
   {
     externalId: 'e2-charlie-bit-my-finger',
+    youtubeId: '_OBlgSz8sSM',
     title: 'Charlie Bit My Finger (2007)',
     description: 'A 56-second home clip that became one of the most-viewed YouTube videos — the apotheosis of incidental family virality.',
     url: 'https://en.wikipedia.org/wiki/Charlie_Bit_My_Finger',
@@ -88,6 +90,7 @@ export const ERA_2005_2012: SeedArtifact[] = [
   },
   {
     externalId: 'e2-chocolate-rain',
+    youtubeId: 'EwTZ2xpQwpA',
     title: 'Chocolate Rain (Tay Zonday, 2007)',
     description: 'A homemade song whose distinctive voice and lyrics became a defining early-YouTube music meme.',
     url: 'https://en.wikipedia.org/wiki/Chocolate_Rain',
@@ -148,6 +151,7 @@ export const ERA_2005_2012: SeedArtifact[] = [
   },
   {
     externalId: 'e2-susan-boyle',
+    youtubeId: 'RxPZh4AnWyk',
     title: 'Susan Boyle, Britain’s Got Talent (2009)',
     description: 'A talent-show audition whose clip became one of the fastest-spreading videos of its time — TV virality entering the platform age.',
     url: 'https://en.wikipedia.org/wiki/Susan_Boyle',
@@ -208,6 +212,7 @@ export const ERA_2005_2012: SeedArtifact[] = [
   },
   {
     externalId: 'e2-bed-intruder',
+    youtubeId: 'hMtZfW2z9dw',
     title: 'Bed Intruder Song (2010)',
     description: 'An Auto-Tuned news interview that became a charting single — a high point of the songified-news meme.',
     url: 'https://en.wikipedia.org/wiki/Bed_Intruder_Song',
@@ -228,6 +233,7 @@ export const ERA_2005_2012: SeedArtifact[] = [
   },
   {
     externalId: 'e2-double-rainbow',
+    youtubeId: 'OQSNhk5ICTI',
     title: 'Double Rainbow (2010)',
     description: 'A hiker’s ecstatic reaction to a rainbow that became a viral sensation and Auto-Tune remix.',
     url: 'https://en.wikipedia.org/wiki/Double_Rainbow_(viral_video)',
@@ -248,6 +254,7 @@ export const ERA_2005_2012: SeedArtifact[] = [
   },
   {
     externalId: 'e2-old-spice',
+    youtubeId: 'owGykVbfgUE',
     title: 'Old Spice: “The Man Your Man Could Smell Like” (2010)',
     description: 'An ad campaign whose real-time video responses pioneered brand-as-creator social interaction.',
     url: 'https://en.wikipedia.org/wiki/Old_Spice#The_Man_Your_Man_Could_Smell_Like',
@@ -369,6 +376,7 @@ export const ERA_2005_2012: SeedArtifact[] = [
   },
   {
     externalId: 'e2-rebecca-black-friday',
+    youtubeId: 'kfVsfOSbJY0',
     title: 'Rebecca Black, “Friday” (2011)',
     description: 'A pay-to-produce pop song that went viral as “the worst song ever” — an early case of algorithmic infamy.',
     url: 'https://en.wikipedia.org/wiki/Friday_(Rebecca_Black_song)',
@@ -389,6 +397,7 @@ export const ERA_2005_2012: SeedArtifact[] = [
   },
   {
     externalId: 'e2-justin-bieber-baby',
+    youtubeId: 'kffacxfA7G4',
     title: 'Justin Bieber, “Baby” (2010)',
     description: 'A YouTube-discovered teen star’s signature single — the platform converting attention into global stardom.',
     url: 'https://en.wikipedia.org/wiki/Baby_(Justin_Bieber_song)',
@@ -429,6 +438,7 @@ export const ERA_2005_2012: SeedArtifact[] = [
   },
   {
     externalId: 'e2-call-me-maybe',
+    youtubeId: 'fWNaR-rxAic',
     title: 'Carly Rae Jepsen, “Call Me Maybe” (2012)',
     description: 'A pop song propelled to global ubiquity by celebrity lip-sync videos — virality through participatory covers.',
     url: 'https://en.wikipedia.org/wiki/Call_Me_Maybe',
@@ -449,6 +459,7 @@ export const ERA_2005_2012: SeedArtifact[] = [
   },
   {
     externalId: 'e2-somebody-that-i-used-to-know',
+    youtubeId: 'MpBtDJCEbsM',
     title: 'Gotye, “Somebody That I Used to Know” (2011)',
     description: 'A global hit whose famous video and many covers exemplified the early-2010s cross-border music economy.',
     url: 'https://en.wikipedia.org/wiki/Somebody_That_I_Used_to_Know',
@@ -549,6 +560,7 @@ export const ERA_2005_2012: SeedArtifact[] = [
   },
   {
     externalId: 'e2-kolaveri-di',
+    youtubeId: 'YR12Z8f1Dh8',
     title: '“Why This Kolaveri Di” (2011)',
     description: 'A Tamil-English song that became India’s first true YouTube viral smash — South-Asian pop traveling natively online.',
     url: 'https://en.wikipedia.org/wiki/Why_This_Kolaveri_Di',
@@ -569,6 +581,7 @@ export const ERA_2005_2012: SeedArtifact[] = [
   },
   {
     externalId: 'e2-girls-generation-gee',
+    youtubeId: 'U2XBjKQxGXA',
     title: 'Girls’ Generation, “Gee” (2009)',
     description: 'A defining second-generation K-pop hit that helped seed the global Hallyu wave before its platform peak.',
     url: 'https://en.wikipedia.org/wiki/Gee_(song)',

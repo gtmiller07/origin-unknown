@@ -288,6 +288,7 @@ export const ERA_2024_2026: SeedArtifact[] = [
   },
   {
     externalId: 'e5-brat',
+    youtubeId: 'eWMVHhEHRFE',
     title: 'Charli XCX, “Brat” summer (2024)',
     description: 'An album whose lime-green branding became a global aesthetic and entered politics — a color and word turned cultural movement.',
     url: 'https://en.wikipedia.org/wiki/Brat_(album)',
@@ -308,6 +309,7 @@ export const ERA_2024_2026: SeedArtifact[] = [
   },
   {
     externalId: 'e5-espresso',
+    youtubeId: 'eVli-tstM5E',
     title: 'Sabrina Carpenter, “Espresso” (2024)',
     description: 'The song of summer 2024, propelled by TikTok and a Coachella debut — platform-era pop ubiquity.',
     url: 'https://en.wikipedia.org/wiki/Espresso_(song)',
@@ -328,6 +330,7 @@ export const ERA_2024_2026: SeedArtifact[] = [
   },
   {
     externalId: 'e5-not-like-us',
+    youtubeId: 'c82oYGeWTx4',
     title: 'Kendrick Lamar, “Not Like Us” (2024)',
     description: 'A diss track that became a cultural event and a Super Bowl halftime centerpiece — the apex of the year’s biggest rap feud.',
     url: 'https://en.wikipedia.org/wiki/Not_Like_Us',
@@ -388,6 +391,7 @@ export const ERA_2024_2026: SeedArtifact[] = [
   },
   {
     externalId: 'e5-chappell-roan',
+    youtubeId: 'Bl0KkYkqWlc',
     title: 'Chappell Roan breakthrough (2024)',
     description: 'A drag-influenced pop persona that broke through via festival and streaming virality — the year’s defining new-star ascent.',
     url: 'https://en.wikipedia.org/wiki/Chappell_Roan',
@@ -530,6 +534,7 @@ export const ERA_2024_2026: SeedArtifact[] = [
   },
   {
     externalId: 'e5-squid-game-2',
+    youtubeId: 'Ed1sGgHUo88',
     title: 'Squid Game season 2 (2024)',
     description: 'One of Netflix’s biggest launches ever — Korean storytelling sustaining its place at the center of global streaming.',
     url: 'https://en.wikipedia.org/wiki/Squid_Game_season_2',

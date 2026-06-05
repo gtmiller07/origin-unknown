@@ -210,6 +210,7 @@ export const ERA_2012_2018: SeedArtifact[] = [
   },
   {
     externalId: 'e3-hotline-bling',
+    youtubeId: 'uxpDa-c-4Mc',
     title: 'Drake, “Hotline Bling” (2015)',
     description: 'A music video whose dance became one of the most-remixed meme templates of its year.',
     url: 'https://en.wikipedia.org/wiki/Hotline_Bling',
@@ -230,6 +231,7 @@ export const ERA_2012_2018: SeedArtifact[] = [
   },
   {
     externalId: 'e3-shape-of-you',
+    youtubeId: 'JGwWNGJdvx8',
     title: 'Ed Sheeran, “Shape of You” (2017)',
     description: 'A streaming-era juggernaut among the most-played songs ever — the platform-optimized global pop single.',
     url: 'https://en.wikipedia.org/wiki/Shape_of_You',
@@ -332,6 +334,7 @@ export const ERA_2012_2018: SeedArtifact[] = [
   },
   {
     externalId: 'e3-blackpink-debut',
+    youtubeId: 'bwmSjveL3Lc',
     title: 'BLACKPINK debut, “Boombayah” (2016)',
     description: 'The launch of the K-pop group that would become the most-subscribed music act on YouTube — third-generation Hallyu going global.',
     url: 'https://en.wikipedia.org/wiki/Boombayah',
@@ -352,6 +355,7 @@ export const ERA_2012_2018: SeedArtifact[] = [
   },
   {
     externalId: 'e3-one-dance-wizkid',
+    youtubeId: 'k_D-2w2dFLk',
     title: 'Drake ft. Wizkid & Kyla, “One Dance” (2016)',
     description: 'A global number-one fusing Afrobeats and dancehall — West African sound traveling into mainstream Western pop.',
     url: 'https://en.wikipedia.org/wiki/One_Dance',
@@ -372,6 +376,7 @@ export const ERA_2012_2018: SeedArtifact[] = [
   },
   {
     externalId: 'e3-li-ziqi',
+    youtubeId: 'vDqnFoiPfBo',
     title: 'Li Ziqi rural-life videos (2017)',
     description: 'Lavishly shot videos of Chinese rural craft and cooking that won a vast global audience — a soft-power phenomenon, state-celebrated.',
     url: 'https://en.wikipedia.org/wiki/Li_Ziqi',
