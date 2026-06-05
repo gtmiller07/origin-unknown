@@ -102,38 +102,6 @@ function lerp(a: number, b: number, t: number): number {
 }
 
 /**
- * Arc tile geometry — a cylindrical strip at unit radius, spanning ARC_ANGLE radians, height 1,
- * tunnel-axis along Z. Scaled per-instance by (r, r, sc) so the arc sits flush on the tunnel wall.
- * DoubleSide material means the inner (viewer-facing) face renders without needing winding reversal.
- */
-const ARC_ANGLE = Math.PI / 9; // 20° arc per tile
-const ARC_SEGS = 8;
-
-function createArcTileGeo(): THREE.BufferGeometry {
-  const pos: number[] = [];
-  const uv: number[] = [];
-  const idx: number[] = [];
-  for (let i = 0; i <= ARC_SEGS; i++) {
-    const u = i / ARC_SEGS;
-    const theta = u * ARC_ANGLE;
-    const c = Math.cos(theta);
-    const s = Math.sin(theta);
-    pos.push(c, s, 0.5,  c, s, -0.5); // top then bottom vertex
-    uv.push(u, 1,  u, 0);
-  }
-  for (let i = 0; i < ARC_SEGS; i++) {
-    const a = i * 2, b = a + 1, c = a + 2, d = a + 3;
-    idx.push(a, b, c,  b, d, c);
-  }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
-  g.setIndex(idx);
-  g.computeVertexNormals();
-  return g;
-}
-
-/**
  * Shared world-space placement. Angle = origin side + stable jitter, with a 30% semantic pull
  * toward the top neighbor's position (#9 embedding-clustered placement). When the neighbor table
  * is populated by compute-neighbors, artifacts with similar embeddings subtly converge in angle.
@@ -142,7 +110,7 @@ function tileTransform(
   a: TunnelArtifact,
   rFn: (y: number) => number,
   posById?: Map<string, { ang: number }>
-): { x: number; y: number; z: number; r: number; scale: number; ang: number } {
+): { x: number; y: number; z: number; scale: number; ang: number } {
   const yr = a.year ?? Y1;
   const z = zOfYear(yr);
   const r = rFn(yr) * 0.9;
@@ -161,7 +129,7 @@ function tileTransform(
       ang = ang + diff * 0.3;
     }
   }
-  return { x: r * Math.cos(ang), y: r * Math.sin(ang), z, r, scale: 0.5 + rFn(yr) * 0.16, ang };
+  return { x: r * Math.cos(ang), y: r * Math.sin(ang), z, scale: 0.5 + rFn(yr) * 0.16, ang };
 }
 
 /**
@@ -408,7 +376,7 @@ function LineageThreads({
 // ─── Animated instanced quads (#2 float + #3 streak) ─────────────────────────
 
 interface TileBase {
-  z: number; r: number; ang: number; scale: number;
+  x: number; y: number; z: number; scale: number;
   phase: number; speed: number; hidden: boolean;
 }
 
@@ -443,12 +411,11 @@ function Tiles({
     if (!mesh) return;
     // Build posById for cluster pull (first pass without pull to get base angles).
     const basePos = new Map(artifacts.map((a) => [a.id, tileTransform(a, rFn)]));
-    // Recompute base transforms (arc-based: r + ang instead of x/y) + drift params.
+    // Recompute base transforms + drift params + hidden state.
     basesRef.current = artifacts.map((a) => {
-      const { z, r, ang, scale } = tileTransform(a, rFn, basePos);
+      const { x, y, z, scale } = tileTransform(a, rFn, basePos);
       return {
-        z, r, ang,
-        scale: hiddenIds?.has(a.id) ? 0 : scale,
+        x, y, z, scale,
         phase: hash01(a.id) * Math.PI * 2,
         speed: 0.28 + hash01(a.id + 's') * 0.15,
         hidden: hiddenIds?.has(a.id) ?? false,
@@ -484,21 +451,13 @@ function Tiles({
       const b = bases[i];
       if (!b) continue;
       // #17 Lerp current scale toward target (smooth show/hide over ~10 frames).
-      const target = b.scale;
+      const target = b.scale; // already 0 when hidden
       cs[i] = cs[i] != null ? cs[i] + (target - cs[i]) * 0.1 : target;
       const sc = cs[i] ?? 0;
-      // Float: gentle angular sway on the wall surface (#2) — tiles rock sideways like leaves.
-      // Arc placement: rotate around Z to center arc at tile's wall angle.
-      // Scale: arc-width factor converts unit-radius arc to tile width at radius r;
-      //        Y scale = sc (visual height, world-Y direction after rotation);
-      //        Z scale = sc * stretch (tunnel-axis depth component).
-      const angDrift = Math.sin(t * b.speed + b.phase) * 0.01;
-      const arcWidthFactor = b.r / ARC_ANGLE; // makes arc width ≈ sc in world units
-      const eff = sc < 0.001 ? 0 : 1;
-      dummy.position.set(0, 0, b.z);
-      dummy.rotation.set(0, 0, b.ang - ARC_ANGLE / 2 + angDrift);
-      // XY: r scales the unit-radius arc to wall radius; Z: tile height × slit-scan.
-      dummy.scale.set(eff * b.r, eff * b.r, eff * sc * stretchZ);
+      const drift = Math.sin(t * b.speed + b.phase) * 0.04;
+      dummy.position.set(b.x, b.y + drift, b.z);
+      dummy.lookAt(0, 0, b.z);
+      dummy.scale.set(sc, sc, sc * stretchZ);
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
     }
@@ -570,22 +529,21 @@ function TexturedTile({
 
   useEffect(() => () => tex?.dispose(), [tex]);
 
-  // Textured tiles face the camera (lookAt) so images display undistorted.
-  // The underlying arc-shaped InstancedMesh tiles handle the wall curvature.
+  // Initial placement.
   useLayoutEffect(() => {
     const m = ref.current;
     if (!m) return;
-    m.position.set(t.x * 0.985, t.y * 0.985, t.z);
+    m.position.set(t.x * 0.98, t.y * 0.98, t.z);
     m.scale.setScalar(t.scale);
     m.lookAt(0, 0, t.z);
   }, [t]);
 
-  // Animate: drift (#2) + slit-scan stretch (#3).
+  // Animate: float (#2) + slit-scan stretch (#3).
   useFrame(({ clock }) => {
     const m = ref.current;
     if (!m) return;
     const drift = Math.sin(clock.elapsedTime * speed + phase) * 0.04;
-    m.position.set(t.x * 0.985, t.y * 0.985 + drift, t.z);
+    m.position.set(t.x * 0.98, t.y * 0.98 + drift, t.z);
     const vel = velocityRef.current;
     const stretchZ = 1 + Math.min(Math.abs(vel) * 2.5, 2.0);
     m.scale.set(t.scale, t.scale, t.scale * stretchZ);
@@ -755,17 +713,17 @@ function DissolveTiles({
   const ref = useRef<THREE.InstancedMesh>(null);
   const progress = useRef(0);
   const dummy = useMemo(() => new THREE.Object3D(), []);
-  const geometry = useMemo(() => createArcTileGeo(), []);
-  const material = useMemo(() => new THREE.MeshBasicMaterial({ color: 0xb85c3b, transparent: true, opacity: 0.6, side: THREE.DoubleSide }), []);
+  const geometry = useMemo(() => new THREE.PlaneGeometry(1, 1), []);
+  const material = useMemo(() => new THREE.MeshBasicMaterial({ color: 0xb85c3b, transparent: true, opacity: 0.6 }), []);
 
   useLayoutEffect(() => {
     const mesh = ref.current;
     if (!mesh) return;
     artifacts.forEach((a, i) => {
-      const { z, r, ang, scale } = tileTransform(a, rFn);
-      dummy.position.set(0, 0, z);
-      dummy.rotation.set(0, 0, ang - ARC_ANGLE / 2);
-      dummy.scale.set(r, r, scale);
+      const { x, y, z, scale } = tileTransform(a, rFn);
+      dummy.position.set(x, y, z);
+      dummy.lookAt(0, 0, z);
+      dummy.scale.setScalar(scale);
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
     });
@@ -778,13 +736,12 @@ function DissolveTiles({
     progress.current = Math.min(1, progress.current + delta / 3);
     const p = progress.current;
     artifacts.forEach((a, i) => {
-      const { z, r, ang, scale } = tileTransform(a, rFn);
-      const ph = hash01(a.id + 'd');
-      const scatter = p * (1 + ph);
-      // Tiles scatter radially outward through the tunnel wall as they dissolve.
-      dummy.position.set(0, 0, z);
-      dummy.rotation.set(0, 0, ang - ARC_ANGLE / 2);
-      dummy.scale.set(r * (1 + scatter), r * (1 + scatter), scale * (1 + p));
+      const { x, y, z, scale } = tileTransform(a, rFn);
+      const phase = hash01(a.id + 'd');
+      const scatter = p * (1 + phase);
+      dummy.position.set(x * (1 + scatter), y * (1 + scatter), z);
+      dummy.lookAt(0, 0, z);
+      dummy.scale.setScalar(scale * (1 + p));
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
     });
