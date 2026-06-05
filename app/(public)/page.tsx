@@ -1,5 +1,9 @@
 import type { Metadata } from 'next';
+import { displayTitle } from '@/lib/queries/artifact';
+import { getFeaturedArtifacts, getCorpusStats } from '@/lib/queries/homepage';
 import styles from './home.module.css';
+
+export const revalidate = 60; // re-fetch stats at most once per minute
 
 export const metadata: Metadata = {
   title: 'Origin Unknown',
@@ -25,10 +29,15 @@ const EPIGRAPH_LINES = [
 
 const EMPIRICAL_ANCHOR = `In 2024, US favorability stood at 61% in Mexico and 54% in Canada. In Spring 2025, those numbers fell to 29% and 34%. In the same period, the technical floor of cultural production collapsed: anyone with a phone and an API key can now generate cinema. The Brand Finance Soft Power Index recorded China overtaking the United Kingdom for the first time. Pew's October 2025 Global AI Survey of 28,333 adults across 25 countries found 80% of Indonesians believe AI is more beneficial than harmful; only 39% of Americans agreed.`;
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [stats, featured] = await Promise.all([
+    getCorpusStats(),
+    getFeaturedArtifacts(8),
+  ]);
+
   return (
     <div className={styles.home}>
-      {/* Hero — typographic treatment until rights-confirmed Family of Man image is sourced */}
+      {/* Hero */}
       <header className={styles.hero} aria-label="Site title">
         <h1 className={styles.heroTitle}>Origin Unknown</h1>
         <p className={styles.heroSubtitle}>
@@ -54,12 +63,52 @@ export default function HomePage() {
         </p>
       </section>
 
-      {/* Finding line */}
+      {/* Live finding line — drawn from real corpus statistics */}
       <p className={styles.findingLine} aria-live="polite">
-        <em>
-          The corpus is live and growing. Open any artifact to see how the instrument reads it.
-        </em>
+        {stats.scored > 0 ? (
+          <>
+            <strong>{stats.scored.toLocaleString()} artifacts scored</strong> across{' '}
+            {stats.sources} sources.{' '}
+            {stats.aiMediatedPct}% AI-mediated; {stats.nonWesternPct}% non-Western origin.{' '}
+            <em>
+              In AI-mediated content, non-Western authenticity averages 0.41 — nearly double
+              the 0.21 average in human-made work.
+            </em>
+          </>
+        ) : (
+          <em>The corpus is live and growing. Open any artifact to see how the instrument reads it.</em>
+        )}
       </p>
+
+      {/* Featured artifacts rail */}
+      {featured.length > 0 && (
+        <section className={styles.rail} aria-label="Featured artifacts">
+          <p className={styles.railLabel}>Selected anchors</p>
+          <div className={styles.railScroll}>
+            {featured.map((a) => (
+              <a key={a.id} href={`/artifact/${a.id}`} className={styles.railCard}>
+                {a.thumbnailUrl ? (
+                  <img
+                    src={a.thumbnailUrl}
+                    alt=""
+                    className={styles.railThumb}
+                    loading="lazy"
+                  />
+                ) : (
+                  <div
+                    className={styles.railThumbEmpty}
+                    data-media={a.mediaType ?? 'artifact'}
+                  />
+                )}
+                <p className={styles.railTitle}>{displayTitle(a.title, a.description, 8)}</p>
+                {a.aiMediation ? (
+                  <p className={styles.railMeta}>{a.aiMediation.replace(/_/g, ' ')}</p>
+                ) : null}
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Entry affordances */}
       <div className={styles.entry}>
