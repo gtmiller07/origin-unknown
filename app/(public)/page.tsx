@@ -5,10 +5,26 @@ import styles from './home.module.css';
 
 export const revalidate = 60; // re-fetch stats at most once per minute
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://originunknown.org';
+
 export const metadata: Metadata = {
   title: 'Origin Unknown',
   description:
     'A methodological instrument for measuring AI-mediated cultural diplomacy in real time.',
+  openGraph: {
+    title: 'Origin Unknown',
+    description: 'A methodological instrument for measuring AI-mediated cultural diplomacy in real time.',
+    url: SITE_URL,
+    siteName: 'Origin Unknown',
+    images: [{ url: `${SITE_URL}/og-default.png`, alt: 'Origin Unknown' }],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Origin Unknown',
+    description: 'A methodological instrument for measuring AI-mediated cultural diplomacy in real time.',
+    images: [`${SITE_URL}/og-default.png`],
+  },
 };
 
 const EPIGRAPH_LINES = [
