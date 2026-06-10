@@ -9,19 +9,12 @@
  * exactly one artifact fits per serverless request, so DEFAULT_LIMIT is 1;
  * bulk/backlog scoring runs locally with no time ceiling via `npm run score`.
  */
-import { and, desc, eq, inArray, isNotNull } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
 import { scoreArtifactContent } from '../ai/claude';
 import { isCapped } from '../cost/caps';
 import { db } from '../db/client';
-import {
-  apiCallLog,
-  artifacts,
-  evidencePanels,
-  scores,
-  scoringEvents,
-  scoringPrompts,
-  sources,
-} from '../db/schema';
+import { apiCallLog, artifacts, scoringPrompts, sources } from '../db/schema';
+import { persistScoringResult } from './persist';
 import {
   type ArtifactForScoring,
   artifactMetadata,
@@ -29,7 +22,7 @@ import {
   sourceContext,
   thumbnailDescription,
 } from './render';
-import { AXIS_KEYS, type ScoringResult, ScoringResultSchema } from './rubric';
+import { type ScoringResult, ScoringResultSchema } from './rubric';
 
 const DEFAULT_LIMIT = 1;
 
@@ -56,17 +49,6 @@ export interface ScoreSummary {
   errors: string[];
 }
 
-function clamp01(n: number): number {
-  if (n < 0) return 0;
-  if (n > 1) return 1;
-  return n;
-}
-
-/** numeric(3,2) column → string, or null for an unscoreable axis. */
-function toNumericString(value: number | null): string | null {
-  return value === null ? null : clamp01(value).toFixed(2);
-}
-
 /**
  * `paglen_questions` is the one array left in the (now-flattened) tool schema, and
  * Claude's forced tool call occasionally serializes an array field as a JSON
@@ -77,7 +59,7 @@ function toNumericString(value: number | null): string | null {
  * double-encoded this way. Anything that still isn't valid JSON is left untouched
  * for ScoringResultSchema to reject, and markFailed handles it.
  */
-function normalizeToolInput(raw: unknown): unknown {
+export function normalizeToolInput(raw: unknown): unknown {
   if (typeof raw !== 'object' || raw === null) return raw;
   const obj = { ...(raw as Record<string, unknown>) };
   const value = obj.paglen_questions;
@@ -154,11 +136,13 @@ export async function scorePendingArtifacts(
         ? and(
             isNotNull(artifacts.embedding),
             eq(artifacts.status, 'pending'),
+            isNull(artifacts.scoringBatchId), // not in-flight in a batch (hybrid)
             inArray(artifacts.id, opts.artifactIds)
           )
         : and(
             isNotNull(artifacts.embedding),
             eq(artifacts.status, 'pending'),
+            isNull(artifacts.scoringBatchId), // not in-flight in a batch (hybrid)
             eq(artifacts.gateDecision, 'include')
           )
     )
@@ -288,100 +272,18 @@ export async function scorePendingArtifacts(
 
     const proposedAt = new Date().toISOString();
 
-    // Taxonomy persistence with a source-derived ground-truth LOCK. The source
-    // category fixes which fields are authoritative from the source (kept as the
-    // 'source_prior' set by migration 0010, never overwritten by the model) versus
-    // which the scorer may set or revise (recorded here as 'ai_proposed'):
-    //   - genai_*        : ai_mediation = ai_generated is locked; authorship_class is a
-    //                      soft prior the scorer may revise; origin_ambiguity is scorer-set.
-    //   - state/cultural : authorship_class and ai_mediation are locked; origin_ambiguity scorer-set.
-    //   - everything else: the scorer sets all three.
-    // A locked field is omitted from the update, so its source_prior row value stands.
-    const cat = row.sourceCategory;
-    const isGenai = cat === 'genai_open_api' || cat === 'genai_curated_upload';
-    const isInstitutional = cat === 'state_media_rss' || cat === 'cultural_institution';
-    const taxonomyUpdate: Partial<{
-      authorshipClass: string;
-      authorshipClassProvenance: string;
-      aiMediation: string;
-      aiMediationProvenance: string;
-      originAmbiguity: string;
-      originAmbiguityProvenance: string;
-    }> = {};
-    if (!isInstitutional) {
-      taxonomyUpdate.authorshipClass = result.authorship_class;
-      taxonomyUpdate.authorshipClassProvenance = 'ai_proposed';
-    }
-    if (!isGenai && !isInstitutional) {
-      taxonomyUpdate.aiMediation = result.ai_mediation;
-      taxonomyUpdate.aiMediationProvenance = 'ai_proposed';
-    }
-    taxonomyUpdate.originAmbiguity = result.origin_ambiguity;
-    taxonomyUpdate.originAmbiguityProvenance = 'ai_proposed';
-
+    // Persist via the shared helper so the synchronous and batch paths write identically.
     try {
       await db.transaction(async (tx) => {
-        for (const axis of AXIS_KEYS) {
-          const axisResult = result.scores[axis];
-          const proposed = toNumericString(axisResult.value);
-          await tx
-            .insert(scores)
-            .values({
-              artifactId: row.id,
-              axis,
-              aiProposedValue: proposed,
-              aiReasoning: axisResult.reasoning,
-              aiModel: model,
-              aiProposedAt: proposedAt,
-              scoringPromptVersion: prompt.version,
-              updatedAt: proposedAt,
-            })
-            .onConflictDoUpdate({
-              target: [scores.artifactId, scores.axis],
-              // Only the ai_* proposal columns are touched; value and the
-              // human_* columns are deliberately left as-is.
-              set: {
-                aiProposedValue: proposed,
-                aiReasoning: axisResult.reasoning,
-                aiModel: model,
-                aiProposedAt: proposedAt,
-                scoringPromptVersion: prompt.version,
-                updatedAt: proposedAt,
-              },
-            });
-
-          await tx.insert(scoringEvents).values({
-            artifactId: row.id,
-            axis,
-            eventType: 'ai_proposed',
-            newValue: proposed,
-            reasoning: axisResult.reasoning,
-          });
-        }
-
-        await tx
-          .insert(evidencePanels)
-          .values({
-            artifactId: row.id,
-            paglenQuestions: result.paglen_questions,
-            updatedAt: proposedAt,
-          })
-          .onConflictDoUpdate({
-            target: evidencePanels.artifactId,
-            set: { paglenQuestions: result.paglen_questions, updatedAt: proposedAt },
-          });
-
-        await tx
-          .update(artifacts)
-          .set({
-            altText: result.alt_text,
-            bearsOnDissertationQuestion: result.bears_on_dissertation_question,
-            dissertationRelevance: result.dissertation_relevance,
-            ...taxonomyUpdate,
-            status: 'scored',
-            updatedAt: proposedAt,
-          })
-          .where(eq(artifacts.id, row.id));
+        await persistScoringResult({
+          tx,
+          artifactId: row.id,
+          sourceCategory: row.sourceCategory,
+          result,
+          model,
+          promptVersion: prompt.version,
+          proposedAt,
+        });
       });
     } catch (err) {
       // Persistence failed after a successful, billed call: record the spend and

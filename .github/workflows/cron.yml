@@ -27,7 +27,9 @@ on:
     - cron: '7 */6 * * *' # ingest
     - cron: '37 */6 * * *' # embeddings (drain-looped)
     - cron: '47 */6 * * *' # gate (drain-looped)
-    - cron: '25 */2 * * *' # scoring (drain-looped, every 2h)
+    - cron: '25 */2 * * *' # scoring — synchronous freshness trickle (every 2h)
+    - cron: '30 1 * * *' # batch-submit — daily bulk batch (~50% cost), budget-sized
+    - cron: '5 * * * *' # batch-poll — hourly: ingest ended batches
     - cron: '15 0 * * *' # maintenance
   workflow_dispatch:
     inputs:
@@ -40,6 +42,8 @@ on:
           - embeddings
           - gate
           - scoring
+          - batch-submit
+          - batch-poll
           - maintenance
           - all
 
@@ -88,6 +92,8 @@ jobs:
               '37 */6 * * *') GROUP="embeddings" ;;
               '47 */6 * * *') GROUP="gate" ;;
               '25 */2 * * *') GROUP="scoring" ;;
+              '30 1 * * *')   GROUP="batch-submit" ;;
+              '5 * * * *')    GROUP="batch-poll" ;;
               '15 0 * * *')   GROUP="maintenance" ;;
               *) echo "::error::No group mapped to schedule '$MATCHED_SCHEDULE'"; exit 1 ;;
             esac
@@ -106,10 +112,11 @@ jobs:
             BODY="$(head -c 500 /tmp/resp.json 2>/dev/null || true)"
           }
 
-          # One-shot route (ingest/maintenance/gate-free). Fails the run on non-200.
+          # One-shot route (ingest/maintenance/gate-free/batch). Fails the run on non-200.
+          # Optional 2nd arg = curl timeout (default 150; batch-poll needs longer).
           single() {
             echo "--- ${1}"
-            call "$1" 150
+            call "$1" "${2:-150}"
             if [ "$HTTP" = "200" ]; then
               echo "  ok: $BODY"; echo "- \`${1}\` — ✅" >> "$GITHUB_STEP_SUMMARY"
             else
@@ -161,14 +168,17 @@ jobs:
           run_scoring()    { drain "score-pending?limit=1" "$SCORE_BUDGET"; }
 
           case "$GROUP" in
-            ingest)      for r in "${INGEST[@]}"; do single "$r"; done ;;
-            embeddings)  run_embeddings ;;
-            gate)        run_gate ;;
-            scoring)     run_scoring ;;
-            maintenance) for r in refresh-cost-window compute-stations heal-thumbnails; do single "$r"; done ;;
+            ingest)       for r in "${INGEST[@]}"; do single "$r"; done ;;
+            embeddings)   run_embeddings ;;
+            gate)         run_gate ;;
+            scoring)      run_scoring ;;
+            batch-submit) single "score-batch-submit" ;;
+            batch-poll)   single "score-batch-poll" 300 ;;
+            maintenance)  for r in refresh-cost-window compute-stations heal-thumbnails; do single "$r"; done ;;
             all)
               for r in "${INGEST[@]}"; do single "$r"; done
               run_embeddings; run_gate; run_scoring
+              single "score-batch-poll" 300
               for r in refresh-cost-window compute-stations heal-thumbnails; do single "$r"; done ;;
             *) echo "::error::Unknown target '$GROUP'"; exit 1 ;;
           esac

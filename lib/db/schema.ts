@@ -148,6 +148,9 @@ export const artifacts = pgTable(
     // Thumbnail health (migration 0019): last time thumbnail_url was probed for reachability.
     // NULL = never checked. The heal-thumbnails cron processes oldest-first, ~monthly per artifact.
     thumbnailCheckedAt: timestamptz('thumbnail_checked_at'),
+    // Batch scoring (migration 0021): set to the scoring_batches.id while an artifact is in-flight
+    // in a Message Batch, so neither the batch submitter nor the synchronous scorer re-selects it.
+    scoringBatchId: text('scoring_batch_id'),
     createdAt: timestamptz('created_at').defaultNow(),
     updatedAt: timestamptz('updated_at'),
   },
@@ -407,6 +410,21 @@ export const apiCallLog = pgTable(
   },
   (table) => [index('api_call_log_service_occurred_idx').on(table.service, table.occurredAt)]
 );
+
+// Message Batches ledger (migration 0021). One row per submitted scoring batch.
+export const scoringBatches = pgTable('scoring_batches', {
+  id: text('id').primaryKey(), // Anthropic batch id (msgbatch_...)
+  status: text('status').notNull().default('submitted'),
+  requestCount: integer('request_count').notNull(),
+  ingestedCount: integer('ingested_count').notNull().default(0),
+  failedCount: integer('failed_count').notNull().default(0),
+  estCostUsd: numeric('est_cost_usd', { precision: 10, scale: 4 }),
+  actualCostUsd: numeric('actual_cost_usd', { precision: 10, scale: 4 }),
+  scoringPromptVersion: text('scoring_prompt_version'),
+  submittedAt: timestamptz('submitted_at').notNull().defaultNow(),
+  completedAt: timestamptz('completed_at'),
+  updatedAt: timestamptz('updated_at').notNull().defaultNow(),
+});
 
 export const systemState = pgTable('system_state', {
   id: integer('id').primaryKey().default(1),
