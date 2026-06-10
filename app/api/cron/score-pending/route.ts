@@ -4,10 +4,13 @@ import { verifyCronAuth } from '../_lib/verify-cron';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-// Raise the function ceiling above Vercel's short default so a full batch (upstream
-// API/model I/O + DB writes) finishes instead of returning a 504. 60s is valid on
-// every plan (Hobby caps here; Pro allows up to 300).
-export const maxDuration = 60;
+// One Opus scoring call is ~46s (max ~51s observed). At maxDuration=60 a single
+// artifact fit but left no margin, and ?limit>1 guaranteed a 504. The cron now calls
+// this with limit=1 and DRAIN-LOOPS it in GitHub Actions for volume; 120s gives a
+// comfortable margin for one artifact. (Pro allows up to 300.) Do NOT raise the
+// effective per-call limit past what fits here — volume comes from looping, not from
+// a bigger per-call batch.
+export const maxDuration = 120;
 
 export async function GET(req: NextRequest) {
   const unauthorized = verifyCronAuth(req);

@@ -1,7 +1,8 @@
 {
   "functions": {
-    "app/api/cron/score-pending/route.ts": { "maxDuration": 60 },
-    "app/api/cron/generate-embeddings/route.ts": { "maxDuration": 60 },
+    "app/api/cron/score-pending/route.ts": { "maxDuration": 120 },
+    "app/api/cron/generate-embeddings/route.ts": { "maxDuration": 120 },
+    "app/api/cron/gate/route.ts": { "maxDuration": 120 },
     "app/api/cron/ingest-youtube/route.ts": { "maxDuration": 60 },
     "app/api/cron/ingest-bluesky/route.ts": { "maxDuration": 60 },
     "app/api/cron/ingest-rss/route.ts": { "maxDuration": 60 },

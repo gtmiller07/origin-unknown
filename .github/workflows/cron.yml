@@ -6,9 +6,14 @@
 # CRON_SECRET bearer token that app/api/cron/_lib/verify-cron.ts checks.
 #
 # Schedules (UTC; minutes are offset off :00 because GitHub delays top-of-hour jobs):
-#   - ingest      every 6h at :07  -> all 7 content ingest routes
-#   - embeddings  every 6h at :37  -> generate-embeddings (30m after ingest, so it has rows to embed)
-#   - maintenance daily   at 00:15 -> refresh-cost-window + compute-stations (era density)
+#   - ingest      every 6h at :07  -> all content ingest routes (one-shot each)
+#   - embeddings  every 6h at :37  -> generate-embeddings, DRAIN-LOOPED to clear backlog
+#   - gate        every 6h at :47  -> relevance gate (free passes once + Haiku triage loop);
+#                                     WITHOUT this the scoring queue starves (rows stay ungated)
+#   - scoring     every 2h at :25  -> score-pending?limit=1, DRAIN-LOOPED (one Opus call ~46s);
+#                                     volume comes from looping, not a big per-call batch. The
+#                                     anthropic daily cost cap is the real spend limiter.
+#   - maintenance daily   at 00:15 -> refresh-cost-window + compute-stations + heal-thumbnails
 #
 # Manual runs: Actions tab -> "Scheduled crons" -> Run workflow -> pick a target.
 #
@@ -20,8 +25,9 @@ name: Scheduled crons
 on:
   schedule:
     - cron: '7 */6 * * *' # ingest
-    - cron: '37 */6 * * *' # embeddings
-    - cron: '52 */6 * * *' # scoring
+    - cron: '37 */6 * * *' # embeddings (drain-looped)
+    - cron: '47 */6 * * *' # gate (drain-looped)
+    - cron: '25 */2 * * *' # scoring (drain-looped, every 2h)
     - cron: '15 0 * * *' # maintenance
   workflow_dispatch:
     inputs:
@@ -32,6 +38,7 @@ on:
         options:
           - ingest
           - embeddings
+          - gate
           - scoring
           - maintenance
           - all
@@ -51,7 +58,7 @@ concurrency:
 jobs:
   trigger:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     env:
       BASE_URL: https://origin-unknown.vercel.app
       # Passed via env (not interpolated into the script) so a malicious schedule
@@ -79,50 +86,94 @@ jobs:
             case "$MATCHED_SCHEDULE" in
               '7 */6 * * *')  GROUP="ingest" ;;
               '37 */6 * * *') GROUP="embeddings" ;;
-              '52 */6 * * *') GROUP="scoring" ;;
+              '47 */6 * * *') GROUP="gate" ;;
+              '25 */2 * * *') GROUP="scoring" ;;
               '15 0 * * *')   GROUP="maintenance" ;;
               *) echo "::error::No group mapped to schedule '$MATCHED_SCHEDULE'"; exit 1 ;;
             esac
           fi
 
+          echo "Running group: $GROUP against $BASE_URL"
+          echo "## Scheduled crons — \`$GROUP\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          FAILED=0
+
+          # One authenticated GET. Sets HTTP (status) and BODY (truncated response).
+          call() {
+            HTTP=$(curl -sS -m "${2:-150}" -o /tmp/resp.json -w '%{http_code}' \
+              -H "Authorization: Bearer ${CRON_SECRET}" -H "Accept: application/json" \
+              "${BASE_URL}/api/cron/${1}") || HTTP=000
+            BODY="$(head -c 500 /tmp/resp.json 2>/dev/null || true)"
+          }
+
+          # One-shot route (ingest/maintenance/gate-free). Fails the run on non-200.
+          single() {
+            echo "--- ${1}"
+            call "$1" 150
+            if [ "$HTTP" = "200" ]; then
+              echo "  ok: $BODY"; echo "- \`${1}\` — ✅" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "  FAIL $HTTP: $BODY"; echo "- \`${1}\` — ❌ ${HTTP}" >> "$GITHUB_STEP_SUMMARY"
+              FAILED=$((FAILED + 1))
+            fi
+          }
+
+          # Repeatedly call a route until the queue drains ("scanned":0), the cost cap
+          # is hit ("capped":true), the time budget elapses, or 3 calls fail in a row.
+          # This is how we get volume without a 504: each call is one small unit of work
+          # that finishes well inside the function ceiling and returns 200.
+          drain() {
+            local route="$1" budget="$2" start iter=0 ok=0 fail=0
+            start=$(date +%s)
+            echo "--- draining ${route} (budget ${budget}s)"
+            while :; do
+              if [ $(( $(date +%s) - start )) -ge "$budget" ]; then echo "  budget reached"; break; fi
+              call "$route" 200
+              iter=$((iter + 1))
+              if [ "$HTTP" = "200" ]; then
+                ok=$((ok + 1)); fail=0
+                echo "  [$iter] $BODY"
+                case "$BODY" in
+                  *'"capped":true'*) echo "  cost cap reached -> stop"; break ;;
+                  *'"scanned":0,'*|*'"scanned":0}'*) echo "  queue drained -> stop"; break ;;
+                esac
+              else
+                fail=$((fail + 1)); echo "  [$iter] FAIL $HTTP: $BODY"
+                if [ "$fail" -ge 3 ]; then echo "  3 consecutive failures -> stop"; break; fi
+              fi
+            done
+            if [ "$ok" -gt 0 ]; then
+              echo "- \`${route}\` — ✅ ${ok} ok / ${iter} calls" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "- \`${route}\` — ❌ 0 ok / ${iter} calls" >> "$GITHUB_STEP_SUMMARY"
+              FAILED=$((FAILED + 1))
+            fi
+          }
+
           INGEST=(ingest-rss ingest-bluesky ingest-youtube ingest-reddit ingest-genai-open ingest-mastodon ingest-cultural ingest-vimeo)
+
+          # Per-stage drain budgets (s). Smaller for the 'all' smoke test so it fits the job.
+          EMBED_BUDGET=720; GATE_BUDGET=600; SCORE_BUDGET=900
+          if [ "$GROUP" = "all" ]; then EMBED_BUDGET=120; GATE_BUDGET=120; SCORE_BUDGET=120; fi
+
+          run_embeddings() { drain "generate-embeddings?limit=300" "$EMBED_BUDGET"; }
+          run_gate()       { single "gate?phase=free"; drain "gate?phase=triage" "$GATE_BUDGET"; }
+          run_scoring()    { drain "score-pending?limit=1" "$SCORE_BUDGET"; }
+
           case "$GROUP" in
-            ingest)      ROUTES=("${INGEST[@]}") ;;
-            embeddings)  ROUTES=(generate-embeddings) ;;
-            scoring)     ROUTES=("score-pending?limit=50") ;;
-            maintenance) ROUTES=(refresh-cost-window compute-stations heal-thumbnails) ;;
-            all)         ROUTES=("${INGEST[@]}" generate-embeddings "score-pending?limit=50" refresh-cost-window compute-stations heal-thumbnails) ;;
+            ingest)      for r in "${INGEST[@]}"; do single "$r"; done ;;
+            embeddings)  run_embeddings ;;
+            gate)        run_gate ;;
+            scoring)     run_scoring ;;
+            maintenance) for r in refresh-cost-window compute-stations heal-thumbnails; do single "$r"; done ;;
+            all)
+              for r in "${INGEST[@]}"; do single "$r"; done
+              run_embeddings; run_gate; run_scoring
+              for r in refresh-cost-window compute-stations heal-thumbnails; do single "$r"; done ;;
             *) echo "::error::Unknown target '$GROUP'"; exit 1 ;;
           esac
 
-          echo "Running group: $GROUP (${#ROUTES[@]} route(s)) against $BASE_URL"
-          echo "## Scheduled crons — \`$GROUP\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-
-          FAILED=0
-          for route in "${ROUTES[@]}"; do
-            url="${BASE_URL}/api/cron/${route}"
-            echo "--- ${route}"
-            # -o body to a file, -w status to stdout; tolerate curl failure so one
-            # bad endpoint doesn't abort the rest.
-            http=$(curl -sS -m 120 -o /tmp/resp.json -w '%{http_code}' \
-              -H "Authorization: Bearer ${CRON_SECRET}" \
-              -H "Accept: application/json" \
-              "$url") || true
-            http="${http:-000}"
-            body="$(head -c 600 /tmp/resp.json 2>/dev/null || true)"
-            if [ "$http" = "200" ]; then
-              echo "  ok ${http}: ${body}"
-              echo "- \`${route}\` — ✅ ${http}" >> "$GITHUB_STEP_SUMMARY"
-            else
-              echo "  FAIL ${http}: ${body}"
-              echo "- \`${route}\` — ❌ ${http}" >> "$GITHUB_STEP_SUMMARY"
-              FAILED=$((FAILED + 1))
-            fi
-          done
-
           if [ "$FAILED" -ne 0 ]; then
-            echo "::error::${FAILED} endpoint(s) did not return 200"
-            exit 1
+            echo "::error::${FAILED} stage(s) failed"; exit 1
           fi
-          echo "All ${#ROUTES[@]} endpoint(s) returned 200."
+          echo "All stages OK for group: $GROUP"
